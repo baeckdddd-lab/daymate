@@ -295,3 +295,24 @@ def api_slot():
         ov.pop(d, None)
     userstore.save_json(uid(), "overrides.json", ov)
     return jsonify(build_plan(uid(), d))
+
+
+@app.get("/")
+def index():
+    if not session.get("uid"):
+        return send_from_directory(STATIC, "login.html")
+    return send_from_directory(STATIC, "index.html")
+
+
+@app.get("/static/<path:fn>")
+def static_files(fn):
+    return send_from_directory(STATIC, fn)
+
+
+@app.get("/<path:fn>")
+def root_files(fn):
+    return send_from_directory(STATIC, fn)
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8800)))

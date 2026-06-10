@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daymate 로그인</title><link rel="stylesheet" href="/static/style.css"></head>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh">
+<div class="card" style="max-width:360px;width:100%">
+  <h2 id="ttl">📅 Daymate</h2>
+  <p class="hint" id="msg">이메일로 로그인하거나 가입하세요.</p>
+  <input id="email" type="email" placeholder="이메일" style="width:100%;margin-bottom:8px">
+  <input id="pw" type="password" placeholder="비밀번호(6자+)" style="width:100%;margin-bottom:10px">
+  <div class="row"><button id="loginBtn" style="flex:1">로그인</button>
+  <button id="regBtn" class="ghost" style="flex:1">가입</button></div>
+</div>
+<script>
+async function post(p){const r=await fetch(p,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({email:email.value.trim(),password:pw.value})});return r;}
+function go(){location.href="/";}
+loginBtn.onclick=async()=>{const r=await post("/api/login");if(r.ok)go();else msg.textContent=(await r.json()).error;};
+regBtn.onclick=async()=>{const r=await post("/api/register");if(r.ok)go();else msg.textContent=(await r.json()).error;};
+</script></body></html>

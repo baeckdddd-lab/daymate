@@ -137,6 +137,7 @@ async function api(path, opts) {
   } catch (e) {
     throw new Error("서버에 연결할 수 없어요. 연구실 PC의 플래너 서버가 꺼졌는지 확인하세요.");
   }
+  if (r.status === 401) { location.href = "/"; return; }
   if (!r.ok) {
     if (r.status === 502 || r.status === 503 || r.status === 504) {
       throw new Error("서버가 응답하지 않아요(502). 연구실 PC에서 서버를 다시 켜주세요.");
