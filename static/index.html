@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>데일리 플래너</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#2f5fd0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="플래너" />
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>📅 데일리 플래너</h1>
+    <div class="controls">
+      <input type="date" id="datePicker" />
+      <button id="btnDaily" class="seg active">일간</button>
+      <button id="btnWeek" class="seg">주간</button>
+      <button id="btnReplan">🔀 다시 짜기</button>
+      <button id="btnPng" class="ghost">PNG 체크리스트</button>
+      <button id="btnRefresh" class="ghost">이번 달 향후계획 갱신</button>
+    </div>
+  </header>
+
+  <div id="warn" class="warn hidden"></div>
+
+  <main id="mainGrid">
+    <aside class="leftpanel">
+      <section class="card cond" id="condCard">
+        <h3>🌤️ 오늘 컨디션 <span class="cnt" id="condSrc"></span></h3>
+        <div class="cond-row">
+          <span class="cond-lab">기분</span>
+          <div class="cond-opts" id="moodOpts"></div>
+        </div>
+        <div class="cond-row">
+          <span class="cond-lab">에너지</span>
+          <div class="cond-opts" id="energyOpts"></div>
+        </div>
+        <div class="cond-foot">
+          <div class="cond-gauge"><b id="condPct">—</b><small id="condHint">기분·에너지를 고르면 오늘 강도가 정해져요</small></div>
+          <button id="condSave" disabled>저장</button>
+        </div>
+      </section>
+      <section class="card sd">
+        <h3>🌱 자기계발 <span class="cnt" id="sdCnt"></span>
+          <button class="cardedit" id="sdEdit" title="수정">✎</button></h3>
+        <ul id="sdList" class="mini"></ul>
+      </section>
+      <section class="card urgent">
+        <h3>🔥 긴급 <span class="cnt" id="urgentCnt"></span>
+          <button class="cardedit" id="urgentEdit" title="수정">✎</button></h3>
+        <ul id="urgentList" class="mini"></ul>
+      </section>
+    </aside>
+
+    <section class="timetable">
+      <h2 id="ttTitle">타임테이블</h2>
+      <div class="ttbar">
+        <button id="btnReplanNow">⏰ 지금부터 다시 짜기</button>
+      </div>
+      <div id="carryPanel" class="carrypanel hidden"></div>
+      <details class="legend-wrap">
+        <summary>색상 범례</summary>
+        <div id="legend" class="legend"></div>
+      </details>
+      <ol id="slots"></ol>
+    </section>
+
+    <aside class="side">
+      <section class="chat">
+        <h3>🤖 플래너 에이전트</h3>
+        <p class="hint">큰 목표를 주면 작은 목표 5 + 긴급 3으로 쪼개고, 일정·자기계발도 함께 짜줍니다.</p>
+        <div id="chatLog" class="chatlog"></div>
+        <div class="row">
+          <input id="chatInput" placeholder="예: 이번 학기 목표는 논문 1편 투고야" />
+          <button id="chatSend">보내기</button>
+        </div>
+        <button id="btnAnalyze" class="ghost" style="width:100%;margin-top:8px">🌙 어제 대화 분석 → 오늘 플랜 보강</button>
+      </section>
+
+      <section>
+        <h3>데일리 목표 입력 <span id="goalDateBadge" class="badge"></span></h3>
+        <p class="hint">위 날짜를 바꾸면 <b>그 날짜</b>에 저장됩니다 (이번 주·다음 주 미리 입력 가능). 한 줄에 하나, <code>제목 (2)</code> = 2블록, <code>(중요)</code> = 최우선.</p>
+        <textarea id="goalInput" rows="6" placeholder="밍글랩 사업제안서 작성 (1)&#10;발표 리허설 (2)(중요)"></textarea>
+        <button id="btnSaveGoals">이 날짜에 저장</button>
+      </section>
+
+      <section>
+        <h3>고정 일정(약속) 추가 <span id="evDateBadge" class="badge"></span></h3>
+        <p class="hint">약속도 위 날짜 기준으로 저장돼요. 이번 주 약속은 날짜를 그날로 바꾼 뒤 추가하세요.</p>
+        <div class="row">
+          <input id="evTitle" placeholder="제목 (예: 팀 회의)" />
+        </div>
+        <div class="row">
+          <input id="evStart" type="time" value="14:00" />
+          <input id="evEnd" type="time" value="15:00" />
+          <button id="btnAddEvent">추가</button>
+        </div>
+        <ul id="evList" class="evlist"></ul>
+      </section>
+
+      <section>
+        <h3>🔁 평소 루틴 <span class="badge">매일 적용</span></h3>
+        <p class="hint">매일 자동 배치되는 루틴. <b>연속</b>은 붙여서(운동처럼), <b>선호시각</b>은 연속일 때만 적용돼요.</p>
+        <div id="habitRows" class="habitrows"></div>
+        <div class="row">
+          <button id="btnAddHabit" class="ghost">+ 루틴 추가</button>
+          <button id="btnSaveHabits">저장</button>
+        </div>
+      </section>
+
+      <section>
+        <h3>예정된 항목 (미리 예약)</h3>
+        <ul id="upcoming" class="upcoming"></ul>
+      </section>
+
+      <section>
+        <h3>⚙️ 초기 세팅</h3>
+        <p class="hint">기상·취침·집중 시간대·식사·루틴 등 기본 설정을 다시 진행해요.</p>
+        <button id="btnSetup" class="ghost">초기 세팅 다시 하기</button>
+      </section>
+    </aside>
+  </main>
+
+  <section id="weekView" class="weekview hidden">
+    <div class="weekhead">
+      <h2 id="weekTitle">주간 타임테이블</h2>
+      <div class="controls">
+        <button id="weekPrev" class="ghost">◀ 지난 주</button>
+        <button id="weekToday" class="ghost">이번 주</button>
+        <button id="weekNext" class="ghost">다음 주 ▶</button>
+        <button id="weekPng">주간 PNG</button>
+      </div>
+    </div>
+    <div id="weekGrid" class="weekgrid"></div>
+  </section>
+
+  <div id="setupOverlay" class="setup-overlay hidden">
+    <div class="setup-card">
+      <h2 id="setupTitle">⚙️ 플래너 초기 세팅</h2>
+      <p class="hint">아래를 채우면 매일 자동으로 하루를 설계해줘요. 나중에 도구 탭에서 다시 바꿀 수 있어요.</p>
+      <div id="setupForm" class="setup-form"></div>
+      <div class="setup-actions">
+        <button id="setupSave">이 설정으로 시작하기</button>
+        <button id="setupCancel" class="ghost">나중에</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bnav" id="bnav">
+    <button data-tab="today" class="active"><span class="i">🗓️</span><span>오늘</span></button>
+    <button data-tab="week"><span class="i">📆</span><span>주간</span></button>
+    <button data-tab="tools"><span class="i">💬</span><span>도구</span></button>
+  </nav>
+
+  <script src="/static/app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
