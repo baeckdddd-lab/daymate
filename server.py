@@ -12,6 +12,19 @@ db.init_db()
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
+# 신규 가입자의 첫 bootstrap이 스케줄러 필수 키(gradWindow 등) 부재로
+# 죽지 않도록 주는 기본 config. setupDone은 넣지 않아 setupNeeded는 True 유지.
+DEFAULT_CONFIG = {
+    "wake": "10:00",
+    "sleep": "03:00",
+    "gradWindow": {"start": "11:00", "end": "16:00", "cutoff": "22:00"},
+    "fixedMeals": [
+        {"name": "아침 식사", "start": "10:30", "blocks": 1},
+        {"name": "점심 식사", "start": "12:00", "blocks": 2},
+        {"name": "저녁 식사", "start": "19:00", "blocks": 2},
+    ],
+}
+
 
 def login_required(fn):
     @wraps(fn)
@@ -65,6 +78,7 @@ def api_register():
         user_id = auth.register(b.get("email"), b.get("password"))
     except auth.AuthError as e:
         return jsonify({"error": str(e)}), 400
+    userstore.save_json(user_id, "config.json", dict(DEFAULT_CONFIG))
     session["uid"] = user_id
     return jsonify({"ok": True})
 
