@@ -22,7 +22,7 @@
       <button id="btnWeek" class="seg">주간</button>
       <button id="btnReplan">🔀 다시 짜기</button>
       <button id="btnPng" class="ghost">PNG 체크리스트</button>
-      <button id="btnRefresh" class="ghost">이번 달 향후계획 갱신</button>
+      <button id="btnRefresh" class="ghost" style="display:none"><!-- 배포판: AI 비활성 -->이번 달 향후계획 갱신</button>
     </div>
   </header>
 
@@ -71,7 +71,7 @@
     </section>
 
     <aside class="side">
-      <section class="chat">
+      <section class="chat" style="display:none"><!-- 배포판: AI 비활성 -->
         <h3>🤖 플래너 에이전트</h3>
         <p class="hint">큰 목표를 주면 작은 목표 5 + 긴급 3으로 쪼개고, 일정·자기계발도 함께 짜줍니다.</p>
         <div id="chatLog" class="chatlog"></div>
