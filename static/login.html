@@ -9,6 +9,8 @@
   <input id="pw" type="password" placeholder="비밀번호(6자+)" style="width:100%;margin-bottom:10px">
   <div class="row"><button id="loginBtn" style="flex:1">로그인</button>
   <button id="regBtn" class="ghost" style="flex:1">가입</button></div>
+  <p class="hint" style="margin-top:12px;text-align:center;font-size:.8rem">
+    <a href="/privacy.html" style="opacity:.7">개인정보 처리방침</a></p>
 </div>
 <script>
 async function post(p){const r=await fetch(p,{method:"POST",headers:{"Content-Type":"application/json"},
