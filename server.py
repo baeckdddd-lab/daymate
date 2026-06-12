@@ -104,6 +104,20 @@ def api_me():
     return jsonify({"loggedIn": bool(session.get("uid"))})
 
 
+@app.post("/api/account/delete")
+@login_required
+def api_account_delete():
+    """계정 영구 삭제(스토어 정책 요구). 비밀번호 재확인 후 모든 데이터 + 계정 제거."""
+    b = request.get_json(force=True)
+    if not auth.verify_user(uid(), b.get("password")):
+        return jsonify({"error": "비밀번호가 일치하지 않습니다"}), 401
+    user_id = uid()
+    userstore.delete_all(user_id)
+    auth.delete_user(user_id)
+    session.clear()
+    return jsonify({"ok": True})
+
+
 # ---- 코어 API ----
 @app.get("/api/bootstrap")
 @login_required

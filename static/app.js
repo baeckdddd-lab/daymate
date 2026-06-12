@@ -975,6 +975,23 @@ function init() {
   $("#btnAddHabit").onclick = () => $("#habitRows").appendChild(habitRow());
   $("#btnSaveHabits").onclick = saveHabits;
   $("#btnSetup").onclick = () => openSetupWizard();
+  $("#btnLogout").onclick = async () => {
+    try { await api("/api/logout", { method: "POST", body: "{}" }); } catch (e) {}
+    location.href = "/";
+  };
+  $("#btnDeleteAccount").onclick = async () => {
+    if (!confirm("정말 계정을 삭제할까요? 모든 데이터가 영구 삭제되며 복구할 수 없어요.")) return;
+    const pw = prompt("확인을 위해 비밀번호를 입력하세요:");
+    if (!pw) return;
+    try {
+      await api("/api/account/delete", { method: "POST", body: JSON.stringify({ password: pw }) });
+    } catch (e) {
+      alert("계정 삭제 실패: " + e.message);
+      return;
+    }
+    alert("계정이 삭제되었습니다.");
+    location.href = "/";
+  };
   $("#setupSave").onclick = saveSetup;
   $("#setupCancel").onclick = () => $("#setupOverlay").classList.add("hidden");
   $("#sdEdit").onclick = () => openCardEditor("sd");

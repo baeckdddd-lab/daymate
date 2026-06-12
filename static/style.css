@@ -179,6 +179,11 @@ code { background: var(--panel2); padding: 1px 5px; border-radius: 4px; font-siz
 .evlist li.muted { color: var(--muted); justify-content: flex-start; }
 button.del { background: transparent; color: #c0392b; border: 1px solid #e6b3b0;
   padding: 2px 8px; font-size: 12px; border-radius: 6px; }
+.account { margin-top: 18px; }
+.account #btnLogout { margin-bottom: 10px; }
+.account .danger-hint { color: #c0392b; }
+button.danger { background: #c0392b; color: #fff; border: 1px solid #c0392b; }
+button.danger:hover { background: #a93226; }
 /* 🔀 다시 짜기 = 헤더 주 액션(primary, 기본 grad). PNG·향후계획은 ghost(secondary). */
 .chat .row { margin-top: 8px; }
 .chatlog { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column;

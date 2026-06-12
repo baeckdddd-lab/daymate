@@ -65,3 +65,11 @@ def load_plan(user_id, date):
     with db.SessionLocal() as s:
         row = _get_row(s, user_id, "plan", date)
         return json.loads(row.json) if row else None
+
+
+def delete_all(user_id):
+    """유저의 모든 데이터(plan·config·날짜별 데이터) 영구 삭제. 계정 삭제용."""
+    with db.SessionLocal() as s:
+        s.query(db.UserData).filter_by(user_id=user_id).delete()
+        s.query(db.UserConfig).filter_by(user_id=user_id).delete()
+        s.commit()

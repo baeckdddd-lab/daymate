@@ -28,3 +28,18 @@ def authenticate(email, password):
         if u and check_password_hash(u.pw_hash, password or ""):
             return u.id
     return None
+
+
+def verify_user(user_id, password):
+    """현재 로그인 유저의 비번 확인 (계정 삭제 등 민감 작업 전)."""
+    with db.SessionLocal() as s:
+        u = s.query(db.User).filter_by(id=user_id).one_or_none()
+        return bool(u and check_password_hash(u.pw_hash, password or ""))
+
+
+def delete_user(user_id):
+    """users 테이블에서 계정 행 삭제."""
+    with db.SessionLocal() as s:
+        u = s.query(db.User).filter_by(id=user_id).one_or_none()
+        if u:
+            s.delete(u); s.commit()
