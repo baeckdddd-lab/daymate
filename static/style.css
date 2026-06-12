@@ -318,3 +318,15 @@ button.del { background: transparent; color: #c0392b; border: 1px solid #e6b3b0;
 .setup-controls .su-sub { width: 100%; }
 .setup-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .setup-actions button { padding: 9px 16px; }
+
+/* Pro 업그레이드 (출시 후 제공 — 현재 비활성 플레이스홀더) */
+.prosection { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  background: linear-gradient(180deg, #fffdf6, var(--panel)); }
+.prosection h3 { margin: 0 0 4px; }
+.profeat { list-style: none; padding: 0; margin: 8px 0; display: grid;
+  grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 13px; color: var(--text); }
+.proprice { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 10px; }
+.proprice .pp { font-size: 13px; color: var(--muted); }
+.proprice .pp b { color: var(--text); font-size: 15px; }
+.proprice .ppoff { color: var(--goal); font-size: 11px; }
+#btnPro:disabled { opacity: .5; cursor: default; width: 100%; }
