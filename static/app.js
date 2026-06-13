@@ -973,6 +973,26 @@ function setMobileTab(tab) {
   window.scrollTo(0, 0);
 }
 
+// U2: Pro 티저 — '알림 받기' 대기리스트(프런트 전용, 라우트 무변경, 결제어 0).
+// 가입 시 받은 이메일 재사용 → 추가 개인정보 수집 없음(R3').
+function setupProTeaser() {
+  const btn = $("#btnPro");
+  const note = $("#proNote");
+  if (!btn) return;
+  const KEY = "proWaitlist";
+  const joined = () => {
+    btn.textContent = "✓ 출시되면 알려드릴게요";
+    btn.classList.add("ghost");
+    btn.disabled = true;
+    if (note) note.textContent = "대기리스트에 등록됐어요. 출시되면 가입 이메일로 안내드릴게요.";
+  };
+  try { if (localStorage.getItem(KEY)) joined(); } catch (e) {}
+  btn.onclick = () => {
+    try { localStorage.setItem(KEY, "1"); } catch (e) {}
+    joined();
+  };
+}
+
 function init() {
   renderLegend();
   document.body.classList.add("tab-today");
@@ -1027,6 +1047,7 @@ function init() {
   $("#btnAddHabit").onclick = () => $("#habitRows").appendChild(habitRow());
   $("#btnSaveHabits").onclick = saveHabits;
   $("#btnSetup").onclick = () => openSetupWizard();
+  setupProTeaser();
   $("#btnLogout").onclick = async () => {
     try { await api("/api/logout", { method: "POST", body: "{}" }); } catch (e) {}
     location.href = "/";

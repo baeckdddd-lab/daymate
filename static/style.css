@@ -330,7 +330,8 @@ button.danger:hover { background: #a93226; }
 .prosection h3 { margin: 0 0 4px; }
 .profeat { list-style: none; padding: 0; margin: 8px 0; display: grid;
   grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 13px; color: var(--text); }
-#btnPro:disabled { opacity: .5; cursor: default; width: 100%; }
+#btnPro { width: 100%; }
+#btnPro:disabled { opacity: .7; cursor: default; }
 
 /* U3: 달성률 띠 + 주간 streak */
 .achv-band { margin: 2px 0 12px; padding: 10px 12px; background: var(--panel);
