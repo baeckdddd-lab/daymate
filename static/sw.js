@@ -1,5 +1,5 @@
 // 데일리 플래너 서비스워커 — 앱 셸 캐시 (오프라인 시 화면 골격 유지)
-const CACHE = "planner-v21";
+const CACHE = "planner-v22";
 const SHELL = ["/", "/static/style.css", "/static/app.js", "/static/icon-192.png"];
 
 self.addEventListener("install", (e) => {
@@ -30,5 +30,30 @@ self.addEventListener("fetch", (e) => {
         return r;
       })
       .catch(() => caches.match(e.request))
+  );
+});
+
+// 웹푸시 수신 → 알림 표시
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) {}
+  const title = d.title || "Daymate";
+  e.waitUntil(self.registration.showNotification(title, {
+    body: d.body || "",
+    icon: "/static/icon-192.png",
+    badge: "/static/icon-192.png",
+    data: { url: d.url || "/" },
+  }));
+});
+
+// 알림 클릭 → 앱 열기/포커스
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "/";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((cl) => {
+      for (const c of cl) { if ("focus" in c) return c.focus(); }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
   );
 });

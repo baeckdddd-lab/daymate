@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from functools import wraps
 from flask import Flask, request, session, jsonify, send_from_directory, Response
 
-import db, auth, userstore, scheduler, configlib, credits
+import db, auth, userstore, scheduler, configlib, credits, push
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
@@ -291,7 +291,90 @@ def api_done():
         userstore.save_plan(uid(), plan)
     state = credits.get_state(uid(), d)
     celebrate = "100" if state["today"]["achievement"] >= 100 else None
+    if celebrate == "100":
+        try:
+            if push.should_send_reward(uid(), d):
+                coins = state["today"]["blockCredits"] + state["today"]["tier"]
+                t = push.MSG["reward"][0]
+                push.send_to_user(uid(), t, push.MSG["reward"][1].format(coins=coins))
+        except Exception:
+            pass  # 푸시 실패가 체크 동작을 막지 않게
     return jsonify({"ok": True, "credits": state, "celebrate": celebrate})
+
+
+TICK_SECRET = os.environ.get("TICK_SECRET", "")
+
+
+@app.get("/api/push/key")
+@login_required
+def api_push_key():
+    return jsonify({"key": push.VAPID_PUBLIC})
+
+
+@app.post("/api/push/subscribe")
+@login_required
+def api_push_subscribe():
+    b = request.get_json(force=True)
+    sub = b.get("subscription") or b
+    push.add_subscription(uid(), sub)
+    return jsonify({"ok": True})
+
+
+@app.post("/api/push/prefs")
+@login_required
+def api_push_prefs():
+    b = request.get_json(force=True)
+    return jsonify({"prefs": push.set_prefs(uid(), b.get("prefs") or {})})
+
+
+@app.post("/api/push/test")
+@login_required
+def api_push_test():
+    n = push.send_to_user(uid(), "🔔 테스트 알림", "알림이 정상 작동해요!")
+    return jsonify({"ok": True, "sent": n})
+
+
+@app.get("/internal/tick")
+def internal_tick():
+    if not TICK_SECRET or request.args.get("key") != TICK_SECRET:
+        return jsonify({"error": "forbidden"}), 403
+    now = push.kst_now()
+    kinds = push.due_kinds(now.hour, now.minute)
+    today = now.date().isoformat()
+    yesterday = (now.date() - timedelta(days=1)).isoformat()
+    cur_slot = scheduler.clock_to_slot(now.strftime("%H:%M"))
+    sent = {"morning": 0, "evening": 0, "midnight_warn": 0, "midnight_settle": 0, "slot": 0}
+    for u in userstore.all_user_ids():
+        p = push.get_push(u)
+        if not p["subscriptions"]:
+            continue
+        prefs = p["prefs"]
+        if "morning" in kinds and prefs.get("morning"):
+            t, b = push.MSG["morning"]
+            sent["morning"] += push.send_to_user(u, t, b)
+        if "evening" in kinds and prefs.get("evening"):
+            t, b = push.MSG["evening"]
+            sent["evening"] += push.send_to_user(u, t, b)
+        if "midnight_warn" in kinds and prefs.get("midnight"):
+            t, b = push.MSG["midnight_warn"]
+            sent["midnight_warn"] += push.send_to_user(u, t, b)
+        if "midnight_settle" in kinds and prefs.get("midnight"):
+            yplan = userstore.load_plan(u, yesterday) or {"slots": []}
+            _, _, pct = credits.achievement(yplan)
+            coins = credits.day_earned(yplan)
+            credits.earned_total(u, today)   # 어제를 settled에 동결
+            t = push.MSG["midnight_settle"][0]
+            b = push.MSG["midnight_settle"][1].format(pct=pct, coins=coins)
+            sent["midnight_settle"] += push.send_to_user(u, t, b)
+        if prefs.get("slot"):
+            plan = userstore.load_plan(u, today)
+            if plan and 0 <= cur_slot < len(plan.get("slots", [])):
+                s = plan["slots"][cur_slot]
+                if s and s.get("type") not in credits.MEANINGLESS_TYPES and not s.get("done"):
+                    t = push.MSG["slot"][0]
+                    b = push.MSG["slot"][1].format(label=s.get("label", ""))
+                    sent["slot"] += push.send_to_user(u, t, b)
+    return jsonify({"ok": True, "kst": now.strftime("%Y-%m-%d %H:%M"), "sent": sent})
 
 
 @app.post("/api/self-dev")

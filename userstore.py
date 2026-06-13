@@ -17,6 +17,7 @@ _FILEMAP = {  # filename : (load_all_key, default)
     "conditions.json": ("conditions", {}),
     "credits.json": ("credits", {}),
     "settled.json": ("settled", {}),
+    "push.json": ("push", {}),
 }
 _FNAME_TO_KIND = {fn: fn[:-5] for fn in _FILEMAP}
 
@@ -82,3 +83,9 @@ def list_plan_dates(user_id):
     with db.SessionLocal() as s:
         rows = s.query(db.UserData.date).filter_by(user_id=user_id, kind="plan").all()
     return sorted(r[0] for r in rows)
+
+
+def all_user_ids():
+    """모든 유저 id 목록(푸시 틱이 전 유저 순회용)."""
+    with db.SessionLocal() as s:
+        return [r[0] for r in s.query(db.User.id).all()]

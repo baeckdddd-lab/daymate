@@ -1145,6 +1145,61 @@ function toast(msg) {
   _toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
 }
 
+// ---- 푸시 알림 ----
+function urlBase64ToUint8Array(b64) {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const base64 = (b64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function enablePush() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    toast("이 브라우저는 알림을 지원하지 않아요"); return;
+  }
+  let perm;
+  try { perm = await Notification.requestPermission(); } catch (e) { perm = "denied"; }
+  if (perm !== "granted") { toast("알림 권한이 필요해요 (브라우저 설정 확인)"); return; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const { key } = await api("/api/push/key");
+    if (!key) { toast("서버 알림 설정이 아직 없어요"); return; }
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key),
+    });
+    await api("/api/push/subscribe", { method: "POST", body: JSON.stringify({ subscription: sub }) });
+    toast("알림이 켜졌어요! 🔔");
+    const pp = $("#pushPrefs"); if (pp) pp.classList.remove("hidden");
+  } catch (e) {
+    toast("알림 켜기 실패: " + (e.message || e));
+  }
+}
+
+function savePushPrefs() {
+  const prefs = {};
+  document.querySelectorAll("#pushPrefs input[data-pref]").forEach((c) => {
+    prefs[c.dataset.pref] = c.checked;
+  });
+  api("/api/push/prefs", { method: "POST", body: JSON.stringify({ prefs }) }).catch(() => {});
+}
+
+function initPushUI() {
+  const en = $("#pushEnable");
+  if (!en) return;
+  en.onclick = enablePush;
+  const test = $("#pushTest");
+  if (test) test.onclick = async () => {
+    try { await api("/api/push/test", { method: "POST", body: "{}" }); toast("테스트 알림 발송! 폰을 확인하세요"); }
+    catch (e) { toast("발송 실패: " + (e.message || e)); }
+  };
+  document.querySelectorAll("#pushPrefs input[data-pref]").forEach((c) => (c.onchange = savePushPrefs));
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      const pp = $("#pushPrefs"); if (pp) pp.classList.remove("hidden");
+    }
+  } catch (e) {}
+}
+
 function init() {
   renderLegend();
   document.body.classList.add("tab-today");
@@ -1204,6 +1259,7 @@ function init() {
   if ($("#shopAddBtn")) $("#shopAddBtn").onclick = addShopItem;
   if ($("#celebrateClose")) $("#celebrateClose").onclick = () => $("#celebrate").classList.add("hidden");
   loadCredits();
+  initPushUI();
   $("#btnLogout").onclick = async () => {
     try { await api("/api/logout", { method: "POST", body: "{}" }); } catch (e) {}
     location.href = "/";

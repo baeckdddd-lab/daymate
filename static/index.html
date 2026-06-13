@@ -142,6 +142,22 @@
         </div>
       </section>
 
+      <section id="pushSection">
+        <h3>🔔 알림</h3>
+        <p class="hint">플랜·보상 알림을 폰으로 받아요. <b>iOS는 홈 화면에 추가</b> 후 켜야 해요.</p>
+        <div class="row">
+          <button id="pushEnable">알림 켜기</button>
+          <button id="pushTest" class="ghost">테스트</button>
+        </div>
+        <div id="pushPrefs" class="pushprefs hidden">
+          <label><input type="checkbox" data-pref="morning" checked> 아침 요약</label>
+          <label><input type="checkbox" data-pref="slot"> 일정 시작 리마인더</label>
+          <label><input type="checkbox" data-pref="evening" checked> 저녁 회고</label>
+          <label><input type="checkbox" data-pref="midnight" checked> 자정 마감·정산</label>
+          <label><input type="checkbox" data-pref="reward" checked> 보상 달성</label>
+        </div>
+      </section>
+
       <section>
         <h3>예정된 항목 (미리 예약)</h3>
         <ul id="upcoming" class="upcoming"></ul>

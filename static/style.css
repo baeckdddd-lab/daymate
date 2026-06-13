@@ -336,6 +336,11 @@ button.danger:hover { background: #a93226; }
   pointer-events: none; max-width: 86vw; text-align: center; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* 알림 prefs */
+.pushprefs { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.pushprefs label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.pushprefs input { width: 18px; height: 18px; }
+
 /* 평소 루틴 / 세팅 행 */
 .habitrows, .su-sub { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .habit-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
