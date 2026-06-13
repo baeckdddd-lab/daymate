@@ -24,7 +24,9 @@
 | `DATABASE_URL` | Postgres URL | 옵션 A는 자동, 옵션 B는 수동. 미설정 시 SQLite(휘발성 — 배포엔 부적합). |
 | `PORT` | (자동) | Railway가 주입. 코드에서 손대지 않음. |
 
-SECRET_KEY 후보(사용자 보관): `e66be1cfea36d29cb4d0e095d9bacbed755f8a52e2710a2b5bc26a8d74898ea2`
+SECRET_KEY 생성(로컬에서 직접, 깃에 올리지 말 것):
+`python -c "import secrets; print(secrets.token_hex(32))"`
+→ 출력된 64자리 hex를 Railway Variables의 `SECRET_KEY`에만 붙여넣기. **이 파일/깃에 절대 평문 보관 금지.**
 
 ## 4. 배포 & 도메인
 1. Deploy 트리거(자동). 빌드 로그에서 gunicorn 기동 확인.
