@@ -187,6 +187,23 @@ function clockToSlot(hhmm) {
   return Math.floor((cm - 600) / 30);
 }
 
+// ---- U3: 달성률 띠 + 주간 streak (기존 done 체크 재사용, 신규 계산/라우트 0) ----
+// 의미항목 = 루틴·식사·자유·filler 제외 (개인앱 달성률 산식과 동일)
+const MEANINGFUL = new Set(["grad", "goal", "exercise", "important", "selfdev", "event"]);
+function dayPct(slots) {
+  const seen = new Set();
+  let done = 0, total = 0;
+  (slots || []).forEach((s) => {
+    if (!MEANINGFUL.has(s.type)) return;
+    const key = (s.base || s.label) + "|" + s.type;  // 같은 작업 여러 슬롯=1건
+    if (seen.has(key)) return;
+    seen.add(key);
+    total += 1;
+    if (s.done) done += 1;
+  });
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
 function renderPlan(plan) {
   $("#ttTitle").textContent = `${plan.date} 타임테이블`;
   nowSlot = plan.date === todayISO() ? clockToSlot(nowHHMM()) : -1;
@@ -196,6 +213,41 @@ function renderPlan(plan) {
   plan.slots.forEach((s) => ol.appendChild(buildSlotRow(plan.date, s)));
   lastPlan = plan;
   populateLeftPanel(plan);
+  renderAchvBand(plan);
+}
+
+function renderAchvBand(plan) {
+  const band = $("#achvBand");
+  if (!band) return;
+  const { done, total, pct } = dayPct(plan.slots);
+  if (!total) { band.classList.add("hidden"); return; }
+  band.classList.remove("hidden");
+  $("#achvPct").textContent = pct + "%";
+  $("#achvHint").textContent = `오늘 달성률 (${done}/${total})`;
+  $("#achvFill").style.width = pct + "%";
+  updateStreak().catch(() => {});  // 점은 실패해도 띠 본체는 유지
+}
+
+// 주간 streak: 이미 있는 /api/week 재사용 (라우트 추가 0)
+async function updateStreak() {
+  const dots = $("#streakDots");
+  if (!dots) return;
+  const data = await api(`/api/week?date=${curDate}`);
+  const today = todayISO();
+  dots.innerHTML = "";
+  (data.days || []).forEach((d) => {
+    const { pct, total } = dayPct(d.slots);
+    const isToday = d.date === today;
+    const future = d.date > today;
+    let cls = "dot";
+    if (future) cls += " future";
+    else if (total && pct >= 60) cls += " hit";       // 그날 달성
+    else if (total && pct > 0) cls += " partial";     // 부분 달성
+    if (isToday) cls += " today";
+    const dot = el("span", cls);
+    dot.title = `${d.date.slice(5)} · ${future ? "예정" : pct + "%"}`;
+    dots.appendChild(dot);
+  });
 }
 
 // ---- 실시간 리플래닝 ----

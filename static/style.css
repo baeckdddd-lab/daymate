@@ -331,3 +331,26 @@ button.danger:hover { background: #a93226; }
 .profeat { list-style: none; padding: 0; margin: 8px 0; display: grid;
   grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 13px; color: var(--text); }
 #btnPro:disabled { opacity: .5; cursor: default; width: 100%; }
+
+/* U3: 달성률 띠 + 주간 streak */
+.achv-band { margin: 2px 0 12px; padding: 10px 12px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 12px; display: flex;
+  flex-direction: column; gap: 7px; }
+.achv-band.hidden { display: none; }
+.achv-row { display: flex; align-items: baseline; gap: 8px; }
+.achv-row b { font-size: 20px; font-weight: 800; color: var(--goal);
+  font-variant-numeric: tabular-nums; line-height: 1; }
+.achv-row small { font-size: 12px; color: var(--muted); }
+.achv-bar { height: 8px; border-radius: 99px; background: var(--panel2); overflow: hidden; }
+.achv-bar > i { display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--selfdev), var(--goal));
+  border-radius: 99px; transition: width .35s ease; }
+.streak-wrap { display: flex; align-items: center; gap: 8px; }
+.streak-cap { font-size: 11px; color: var(--muted); flex: none; }
+.streak-dots { display: flex; gap: 6px; }
+.streak-dots .dot { width: 12px; height: 12px; border-radius: 50%;
+  background: var(--panel2); border: 1px solid var(--line); }
+.streak-dots .dot.partial { background: #bfe3cf; border-color: #bfe3cf; }
+.streak-dots .dot.hit { background: var(--goal); border-color: var(--goal); }
+.streak-dots .dot.future { opacity: .4; }
+.streak-dots .dot.today { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--selfdev); }

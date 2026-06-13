@@ -59,6 +59,17 @@
 
     <section class="timetable">
       <h2 id="ttTitle">타임테이블</h2>
+      <div id="achvBand" class="achv-band hidden">
+        <div class="achv-row">
+          <b id="achvPct">0%</b>
+          <small id="achvHint">오늘 달성률</small>
+        </div>
+        <div class="achv-bar"><i id="achvFill"></i></div>
+        <div class="streak-wrap">
+          <small class="streak-cap">이번 주</small>
+          <div id="streakDots" class="streak-dots"></div>
+        </div>
+      </div>
       <div class="ttbar">
         <button id="btnReplanNow">⏰ 지금부터 다시 짜기</button>
       </div>
