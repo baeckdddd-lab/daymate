@@ -330,8 +330,4 @@ button.danger:hover { background: #a93226; }
 .prosection h3 { margin: 0 0 4px; }
 .profeat { list-style: none; padding: 0; margin: 8px 0; display: grid;
   grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 13px; color: var(--text); }
-.proprice { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 10px; }
-.proprice .pp { font-size: 13px; color: var(--muted); }
-.proprice .pp b { color: var(--text); font-size: 15px; }
-.proprice .ppoff { color: var(--goal); font-size: 11px; }
 #btnPro:disabled { opacity: .5; cursor: default; width: 100%; }
