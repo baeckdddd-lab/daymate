@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from functools import wraps
 from flask import Flask, request, session, jsonify, send_from_directory, Response
 
-import db, auth, userstore, scheduler, configlib
+import db, auth, userstore, scheduler, configlib, credits
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
@@ -254,6 +254,30 @@ def api_events():
     return jsonify(build_plan(uid(), b["date"]))
 
 
+def _today():
+    return resolve_date("today")
+
+
+@app.get("/api/credits")
+@login_required
+def api_credits():
+    return jsonify(credits.get_state(uid(), _today()))
+
+
+@app.post("/api/credits/buy")
+@login_required
+def api_credits_buy():
+    b = request.get_json(force=True)
+    return jsonify(credits.buy(uid(), b.get("itemId"), _today()))
+
+
+@app.post("/api/credits/shop")
+@login_required
+def api_credits_shop():
+    b = request.get_json(force=True)
+    return jsonify({"shop": credits.save_shop(uid(), b.get("shop") or [])})
+
+
 @app.post("/api/done")
 @login_required
 def api_done():
@@ -265,7 +289,9 @@ def api_done():
             if s["slot"] == b["slot"]:
                 s["done"] = bool(b["done"])
         userstore.save_plan(uid(), plan)
-    return jsonify({"ok": True})
+    state = credits.get_state(uid(), d)
+    celebrate = "100" if state["today"]["achievement"] >= 100 else None
+    return jsonify({"ok": True, "credits": state, "celebrate": celebrate})
 
 
 @app.post("/api/self-dev")

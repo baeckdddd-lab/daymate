@@ -15,6 +15,8 @@ _FILEMAP = {  # filename : (load_all_key, default)
     "fillers.json": ("fillers", {}),
     "overrides.json": ("overrides", {}),
     "conditions.json": ("conditions", {}),
+    "credits.json": ("credits", {}),
+    "settled.json": ("settled", {}),
 }
 _FNAME_TO_KIND = {fn: fn[:-5] for fn in _FILEMAP}
 
@@ -73,3 +75,10 @@ def delete_all(user_id):
         s.query(db.UserData).filter_by(user_id=user_id).delete()
         s.query(db.UserConfig).filter_by(user_id=user_id).delete()
         s.commit()
+
+
+def list_plan_dates(user_id):
+    """유저가 보유한 plan 날짜를 오름차순으로 반환."""
+    with db.SessionLocal() as s:
+        rows = s.query(db.UserData.date).filter_by(user_id=user_id, kind="plan").all()
+    return sorted(r[0] for r in rows)
