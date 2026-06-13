@@ -52,6 +52,15 @@ def test_done_returns_credits():
     assert "celebrate" in j
 
 
+def test_plan_png():
+    c = _client("png@c.com")
+    c.post("/api/generate", json={"date": "today"})
+    r = c.get("/api/plan.png?date=today")
+    assert r.status_code == 200 and r.mimetype == "image/png"
+    body = r.get_data()
+    assert body[:8] == b"\x89PNG\r\n\x1a\n" and len(body) > 2000
+
+
 def test_multiuser_isolation():
     a = _client("iso-a@c.com")
     b = _client("iso-b@c.com")

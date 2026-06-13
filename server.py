@@ -173,6 +173,18 @@ def api_week_png():
         "Content-Disposition": f'inline; filename="week-{monday.isoformat()}.png"'})
 
 
+@app.get("/api/plan.png")
+@login_required
+def api_plan_png():
+    """일간 체크리스트 PNG. 프런트 'PNG 체크리스트' 버튼."""
+    import render_plan
+    d = resolve_date(request.args.get("date"))
+    plan = userstore.load_plan(uid(), d) or build_plan(uid(), d)
+    png = render_plan.render(plan)
+    return Response(png, mimetype="image/png", headers={
+        "Content-Disposition": f'inline; filename="plan-{d}.png"'})
+
+
 @app.post("/api/generate")
 @login_required
 def api_generate():
@@ -307,7 +319,7 @@ def api_done():
     if celebrate == "100":
         try:
             if push.should_send_reward(uid(), d):
-                coins = state["today"]["blockCredits"] + state["today"]["tier"]
+                coins = state["today"]["earned"]
                 t = push.MSG["reward"][0]
                 push.send_to_user(uid(), t, push.MSG["reward"][1].format(coins=coins))
         except Exception:

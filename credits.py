@@ -9,7 +9,6 @@ import db
 import userstore
 
 MEANINGLESS_TYPES = {"routine", "meal", "free"}
-BLOCK_CREDIT = 10
 MILESTONES = {3: 50, 7: 150, 14: 400, 30: 1000}
 
 SEED_SHOP = [
@@ -30,10 +29,6 @@ def _meaningful(slots):
     return [s for s in slots if s.get("type") not in MEANINGLESS_TYPES]
 
 
-def block_credits(plan):
-    return BLOCK_CREDIT * sum(1 for s in _meaningful(plan.get("slots", [])) if s.get("done"))
-
-
 def achievement(plan):
     m = _meaningful(plan.get("slots", []))
     total = len(m)
@@ -42,19 +37,19 @@ def achievement(plan):
     return done, total, pct
 
 
-def tier_bonus(pct):
+def completion_bonus(pct):
+    """달성 보너스(달성률에 더하는 가산점). 100% 완벽 +50, 80%+ +20."""
     if pct >= 100:
-        return 120
+        return 50
     if pct >= 80:
-        return 60
-    if pct >= 60:
-        return 30
+        return 20
     return 0
 
 
 def day_earned(plan):
+    """하루 크레딧 = 달성률(%) + 완벽/우수 보너스. 블록당 가산 없음(달성도 기반·강제)."""
     _, _, pct = achievement(plan)
-    return block_credits(plan) + tier_bonus(pct)
+    return pct + completion_bonus(pct)
 
 
 def streak_len(pcts):
@@ -122,7 +117,7 @@ def get_state(user_id, today):
     return {
         "earned": earned, "spent": spent_sum, "balance": earned - spent_sum,
         "today": {"done": done, "total": total, "achievement": pct,
-                  "blockCredits": block_credits(plan), "tier": tier_bonus(pct)},
+                  "earned": day_earned(plan)},
         "streak": settled.get("maxStreak", 0),
         "shop": c["shop"], "spentLog": c["spent"][-20:],
         "nickname": get_nickname(user_id),
