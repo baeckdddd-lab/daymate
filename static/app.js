@@ -1220,6 +1220,16 @@ function savePushPrefs() {
   api("/api/push/prefs", { method: "POST", body: JSON.stringify({ prefs }) }).catch(() => {});
 }
 
+function showNotifyNudge() {
+  const bar = $("#notifyNudge");
+  if (!bar) return;
+  const supported = "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
+  let granted = false, dismissed = false;
+  try { granted = Notification.permission === "granted"; } catch (e) {}
+  try { dismissed = localStorage.getItem("nudgeDismissed") === "1"; } catch (e) {}
+  bar.classList.toggle("hidden", !supported || granted || dismissed);
+}
+
 function initPushUI() {
   const en = $("#pushEnable");
   if (!en) return;
@@ -1300,6 +1310,12 @@ function init() {
   if ($("#nickSave")) $("#nickSave").onclick = saveNickname;
   if ($("#rankRefresh")) $("#rankRefresh").onclick = loadRanking;
   initPushUI();
+  showNotifyNudge();
+  if ($("#nudgeEnable")) $("#nudgeEnable").onclick = async () => { await enablePush(); showNotifyNudge(); };
+  if ($("#nudgeClose")) $("#nudgeClose").onclick = () => {
+    try { localStorage.setItem("nudgeDismissed", "1"); } catch (e) {}
+    $("#notifyNudge").classList.add("hidden");
+  };
   $("#btnLogout").onclick = async () => {
     try { await api("/api/logout", { method: "POST", body: "{}" }); } catch (e) {}
     location.href = "/";

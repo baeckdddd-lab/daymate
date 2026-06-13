@@ -355,6 +355,17 @@ button.danger:hover { background: #a93226; }
 .rank-item .rank-cr { color: var(--grad); font-weight: 700; font-variant-numeric: tabular-nums; }
 .rank-item.me { background: var(--panel, #eef3fb); outline: 1px solid var(--grad); }
 
+/* 알림 켜기 권유 배너 */
+.notify-nudge { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--grad); color: #fff; padding: 10px 14px; border-radius: 12px;
+  margin: 8px 24px 0; font-size: 14px; }
+.notify-nudge.hidden { display: none; }
+.notify-nudge button { background: rgba(255,255,255,.2); color: #fff; border: 0;
+  border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.notify-nudge .nudge-x { background: transparent; padding: 6px 8px; }
+.nudge-actions { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 760px) { .notify-nudge { margin: 8px 14px 0; } }
+
 /* 평소 루틴 / 세팅 행 */
 .habitrows, .su-sub { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .habit-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
