@@ -2,7 +2,7 @@
   "name": "데일리 플래너",
   "short_name": "플래너",
   "description": "하루를 30분 단위로 자동 설계하는 플래너",
-  "start_url": "/?k=2zoBB4v29XyjbjOd",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
