@@ -973,7 +973,7 @@ function setMobileTab(tab) {
   document.querySelectorAll("#bnav button").forEach((b) =>
     b.classList.toggle("active", b.dataset.tab === tab));
   if (tab === "week") { weekAnchor = curDate; renderWeek(); }
-  if (tab === "tools") loadCredits();
+  if (tab === "tools") { loadCredits(); loadRanking(); }
   window.scrollTo(0, 0);
 }
 
@@ -1012,6 +1012,8 @@ function renderCredits(s) {
   set("#cBalance", s.balance);
   set("#cEarned", s.earned);
   set("#cStreak", s.streak);
+  const ni = $("#nickInput");
+  if (ni && document.activeElement !== ni && s.nickname) ni.value = s.nickname;
   const list = $("#shopList");
   if (!list) return;
   list.innerHTML = "";
@@ -1145,6 +1147,41 @@ function toast(msg) {
   _toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
 }
 
+// ---- 랭킹 / 닉네임 ----
+async function loadRanking() {
+  try { renderRanking(await api("/api/ranking")); } catch (e) {}
+}
+
+function renderRanking(r) {
+  const list = $("#rankList");
+  if (!list || !r) return;
+  list.innerHTML = "";
+  const medals = ["🥇", "🥈", "🥉"];
+  r.top.forEach((row) => {
+    const li = el("li", "rank-item" + (row.me ? " me" : ""));
+    const rk = el("span", "rank-no");
+    rk.textContent = medals[row.rank - 1] || row.rank;
+    const nm = el("span", "rank-nick");
+    nm.textContent = row.nickname;
+    const cr = el("span", "rank-cr");
+    cr.textContent = `${row.earned}`;
+    li.appendChild(rk); li.appendChild(nm); li.appendChild(cr);
+    list.appendChild(li);
+  });
+  const mine = $("#rankMine");
+  if (mine) mine.textContent = r.myRank
+    ? `내 순위: ${r.myRank}위 / ${r.total}명`
+    : `참여자 ${r.total}명`;
+}
+
+async function saveNickname() {
+  const name = ($("#nickInput").value || "").trim();
+  if (!name) { toast("닉네임을 입력하세요"); return; }
+  const r = await api("/api/nickname", { method: "POST", body: JSON.stringify({ nickname: name }) });
+  if (r && r.ok) { toast("닉네임 저장됨"); loadRanking(); }
+  else { toast((r && r.error) || "저장 실패"); }
+}
+
 // ---- 푸시 알림 ----
 function urlBase64ToUint8Array(b64) {
   const pad = "=".repeat((4 - (b64.length % 4)) % 4);
@@ -1259,6 +1296,9 @@ function init() {
   if ($("#shopAddBtn")) $("#shopAddBtn").onclick = addShopItem;
   if ($("#celebrateClose")) $("#celebrateClose").onclick = () => $("#celebrate").classList.add("hidden");
   loadCredits();
+  loadRanking();
+  if ($("#nickSave")) $("#nickSave").onclick = saveNickname;
+  if ($("#rankRefresh")) $("#rankRefresh").onclick = loadRanking;
   initPushUI();
   $("#btnLogout").onclick = async () => {
     try { await api("/api/logout", { method: "POST", body: "{}" }); } catch (e) {}

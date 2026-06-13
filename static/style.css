@@ -341,6 +341,20 @@ button.danger:hover { background: #a93226; }
 .pushprefs label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
 .pushprefs input { width: 18px; height: 18px; }
 
+/* 닉네임 / 랭킹 */
+.nick-row { margin-top: 10px; }
+.nick-row input { flex: 1; }
+#rankSection h3 { display: flex; align-items: center; gap: 8px; }
+#rankSection h3 .ghost { margin-left: auto; padding: 3px 10px; font-size: 12px; }
+.ranklist { list-style: none; margin: 8px 0 0; padding: 0; }
+.rank-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 10px; }
+.rank-item + .rank-item { margin-top: 2px; }
+.rank-item .rank-no { width: 28px; text-align: center; font-weight: 700; }
+.rank-item .rank-nick { flex: 1; }
+.rank-item .rank-cr { color: var(--grad); font-weight: 700; font-variant-numeric: tabular-nums; }
+.rank-item.me { background: var(--panel, #eef3fb); outline: 1px solid var(--grad); }
+
 /* 평소 루틴 / 세팅 행 */
 .habitrows, .su-sub { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .habit-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

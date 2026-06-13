@@ -5,6 +5,7 @@
 """
 import time
 
+import db
 import userstore
 
 MEANINGLESS_TYPES = {"routine", "meal", "free"}
@@ -124,6 +125,7 @@ def get_state(user_id, today):
                   "blockCredits": block_credits(plan), "tier": tier_bonus(pct)},
         "streak": settled.get("maxStreak", 0),
         "shop": c["shop"], "spentLog": c["spent"][-20:],
+        "nickname": get_nickname(user_id),
     }
 
 
@@ -140,6 +142,46 @@ def buy(user_id, item_id, today):
                        "name": item["name"], "price": int(item["price"])})
     userstore.save_json(user_id, "credits.json", c)
     return {"ok": True, "balance": balance - int(item["price"])}
+
+
+def _default_nick(user_id):
+    with db.SessionLocal() as s:
+        u = s.query(db.User).filter_by(id=user_id).one_or_none()
+    if u and u.email:
+        return u.email.split("@")[0][:20]
+    return f"친구{user_id}"
+
+
+def get_nickname(user_id):
+    c = userstore.load_json(user_id, "credits.json", {})
+    nick = (c.get("nickname") or "").strip()
+    return nick or _default_nick(user_id)
+
+
+def set_nickname(user_id, name):
+    name = (name or "").strip()[:20]
+    if not name:
+        return {"ok": False, "error": "닉네임을 입력하세요"}
+    c = _load(user_id)
+    c["nickname"] = name
+    userstore.save_json(user_id, "credits.json", c)
+    return {"ok": True, "nickname": name}
+
+
+def ranking(today, me):
+    """전체 유저의 누적 earned(소비 무관) 내림차순. 상위 20 + 내 등수."""
+    rows = []
+    for u in userstore.all_user_ids():
+        rows.append({"uid": u, "nickname": get_nickname(u), "earned": earned_total(u, today)})
+    rows.sort(key=lambda r: (-r["earned"], r["nickname"]))
+    top, my_rank = [], None
+    for i, r in enumerate(rows, 1):
+        if r["uid"] == me:
+            my_rank = i
+        if i <= 20:
+            top.append({"rank": i, "nickname": r["nickname"],
+                        "earned": r["earned"], "me": r["uid"] == me})
+    return {"top": top, "myRank": my_rank, "total": len(rows)}
 
 
 def save_shop(user_id, shop):

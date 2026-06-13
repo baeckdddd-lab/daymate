@@ -278,6 +278,19 @@ def api_credits_shop():
     return jsonify({"shop": credits.save_shop(uid(), b.get("shop") or [])})
 
 
+@app.post("/api/nickname")
+@login_required
+def api_nickname():
+    b = request.get_json(force=True)
+    return jsonify(credits.set_nickname(uid(), b.get("nickname")))
+
+
+@app.get("/api/ranking")
+@login_required
+def api_ranking():
+    return jsonify(credits.ranking(_today(), uid()))
+
+
 @app.post("/api/done")
 @login_required
 def api_done():

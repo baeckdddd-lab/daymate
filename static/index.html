@@ -129,6 +129,17 @@
         <div class="wallet-row"><span>잔고</span><b id="cBalance">0</b></div>
         <div class="wallet-row muted"><span>누적 적립 <span id="cEarned">0</span></span>
           <span>🔥 연속 <b id="cStreak">0</b>일</span></div>
+        <div class="row nick-row">
+          <input id="nickInput" placeholder="랭킹에 표시될 닉네임" maxlength="20" />
+          <button id="nickSave">저장</button>
+        </div>
+      </section>
+
+      <section id="rankSection">
+        <h3>🏆 크레딧 랭킹 <button id="rankRefresh" class="ghost">새로고침</button></h3>
+        <p class="hint">친구들과 누적 크레딧을 겨뤄요. (쓴 크레딧은 등수에 영향 없어요)</p>
+        <ol id="rankList" class="ranklist"></ol>
+        <p id="rankMine" class="hint"></p>
       </section>
 
       <section id="creditShop">
