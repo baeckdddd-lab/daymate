@@ -361,7 +361,8 @@ def api_push_test():
 
 @app.get("/internal/tick")
 def internal_tick():
-    if not TICK_SECRET or request.args.get("key") != TICK_SECRET:
+    secret = os.environ.get("TICK_SECRET", "") or TICK_SECRET
+    if not secret or request.args.get("key") != secret:
         return jsonify({"error": "forbidden"}), 403
     now = push.kst_now()
     kinds = push.due_kinds(now.hour, now.minute)
