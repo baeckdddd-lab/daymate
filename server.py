@@ -2,7 +2,7 @@
 import os
 from datetime import date, timedelta
 from functools import wraps
-from flask import Flask, request, session, jsonify, send_from_directory
+from flask import Flask, request, session, jsonify, send_from_directory, Response
 
 import db, auth, userstore, scheduler, configlib
 
@@ -137,25 +137,40 @@ def api_bootstrap():
     })
 
 
-@app.get("/api/week")
-@login_required
-def api_week():
-    """주간 타임테이블(월~일 7일). 프런트 renderWeek가 days[].slots[range,label,type,done] 사용."""
-    d = resolve_date(request.args.get("date"))
-    base = date.fromisoformat(d)
+def _week_plans(user_id, date_str):
+    """해당 주(월~일) 7일의 {date,dow,slots(full)} 리스트 + 월요일 반환."""
+    base = date.fromisoformat(date_str)
     monday = base - timedelta(days=base.weekday())
     dows = ["월", "화", "수", "목", "금", "토", "일"]
     days = []
     for i in range(7):
         dd = (monday + timedelta(days=i)).isoformat()
-        plan = userstore.load_plan(uid(), dd) or build_plan(uid(), dd)
-        days.append({
-            "date": dd, "dow": dows[i],
-            "slots": [{"range": s["range"], "label": s["label"],
-                       "type": s["type"], "done": s.get("done", False)}
-                      for s in plan["slots"]],
-        })
-    return jsonify({"start": monday.isoformat(), "days": days})
+        plan = userstore.load_plan(user_id, dd) or build_plan(user_id, dd)
+        days.append({"date": dd, "dow": dows[i], "slots": plan["slots"]})
+    return monday, days
+
+
+@app.get("/api/week")
+@login_required
+def api_week():
+    """주간 타임테이블(월~일 7일). 프런트 renderWeek가 days[].slots[range,label,type,done] 사용."""
+    monday, days = _week_plans(uid(), resolve_date(request.args.get("date")))
+    trimmed = [{"date": d["date"], "dow": d["dow"],
+                "slots": [{"range": s["range"], "label": s["label"],
+                           "type": s["type"], "done": s.get("done", False)}
+                          for s in d["slots"]]} for d in days]
+    return jsonify({"start": monday.isoformat(), "days": trimmed})
+
+
+@app.get("/api/week.png")
+@login_required
+def api_week_png():
+    """주간 타임테이블 PNG. 프런트 '주간 PNG' 버튼이 새 탭으로 연다."""
+    import render_week
+    monday, days = _week_plans(uid(), resolve_date(request.args.get("date")))
+    png = render_week.render({"start": monday.isoformat(), "days": days})
+    return Response(png, mimetype="image/png", headers={
+        "Content-Disposition": f'inline; filename="week-{monday.isoformat()}.png"'})
 
 
 @app.post("/api/generate")
