@@ -124,6 +124,24 @@
         </div>
       </section>
 
+      <section id="creditWallet">
+        <h3>💰 크레딧 지갑</h3>
+        <div class="wallet-row"><span>잔고</span><b id="cBalance">0</b></div>
+        <div class="wallet-row muted"><span>누적 적립 <span id="cEarned">0</span></span>
+          <span>🔥 연속 <b id="cStreak">0</b>일</span></div>
+      </section>
+
+      <section id="creditShop">
+        <h3>🎁 보상샵 <button id="shopEditBtn" class="ghost">편집</button></h3>
+        <p class="hint">플랜을 지켜 모은 크레딧으로 나에게 보상을 주세요.</p>
+        <div id="shopList" class="shoplist"></div>
+        <div id="shopAddRow" class="row hidden">
+          <input id="shopName" placeholder="보상 이름 (예: 커피 한 잔)" />
+          <input id="shopPrice" type="number" min="0" placeholder="가격" style="max-width:90px" />
+          <button id="shopAddBtn">추가</button>
+        </div>
+      </section>
+
       <section>
         <h3>예정된 항목 (미리 예약)</h3>
         <ul id="upcoming" class="upcoming"></ul>
@@ -180,6 +198,16 @@
         <button id="setupSave">이 설정으로 시작하기</button>
         <button id="setupCancel" class="ghost">나중에</button>
       </div>
+    </div>
+  </div>
+
+  <div id="celebrate" class="celebrate hidden">
+    <canvas id="confetti"></canvas>
+    <div class="celebrate-card">
+      <div class="celebrate-emoji">🎉</div>
+      <h2 id="celebrateTitle">100% 달성!</h2>
+      <p id="celebrateSub">오늘 플랜 완벽하게 지켰어요</p>
+      <button id="celebrateClose">좋아!</button>
     </div>
   </div>
 

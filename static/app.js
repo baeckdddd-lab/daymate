@@ -662,7 +662,10 @@ function buildSlotRow(date, s) {
   cb.checked = !!s.done;
   cb.onchange = () => api("/api/done", {
     method: "POST", body: JSON.stringify({ date, slot: s.slot, done: cb.checked }),
-  }).then(() => li.classList.toggle("done", cb.checked));
+  }).then((j) => {
+    li.classList.toggle("done", cb.checked);
+    handleDoneResponse(j, cb.checked);
+  });
   const time = el("span", "time");
   time.textContent = s.range;
   const body = el("div", "slotbody");
@@ -970,6 +973,7 @@ function setMobileTab(tab) {
   document.querySelectorAll("#bnav button").forEach((b) =>
     b.classList.toggle("active", b.dataset.tab === tab));
   if (tab === "week") { weekAnchor = curDate; renderWeek(); }
+  if (tab === "tools") loadCredits();
   window.scrollTo(0, 0);
 }
 
@@ -991,6 +995,154 @@ function setupProTeaser() {
     try { localStorage.setItem(KEY, "1"); } catch (e) {}
     joined();
   };
+}
+
+// ---- 크레딧 보상 ----
+let creditState = null;
+let shopEditMode = false;
+
+async function loadCredits() {
+  try { renderCredits(await api("/api/credits")); } catch (e) {}
+}
+
+function renderCredits(s) {
+  if (!s) return;
+  creditState = s;
+  const set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+  set("#cBalance", s.balance);
+  set("#cEarned", s.earned);
+  set("#cStreak", s.streak);
+  const list = $("#shopList");
+  if (!list) return;
+  list.innerHTML = "";
+  s.shop.forEach((it) => {
+    const row = el("div", "shop-item");
+    const name = el("span", "shop-name");
+    name.textContent = `${it.emoji} ${it.name}`;
+    row.appendChild(name);
+    if (shopEditMode) {
+      const del = el("button", "shop-del");
+      del.textContent = "✕";
+      del.title = "삭제";
+      del.onclick = () => deleteShopItem(it.id);
+      const price = el("span", "shop-price");
+      price.textContent = `${it.price}`;
+      row.appendChild(price);
+      row.appendChild(del);
+    } else {
+      const buy = el("button", "buy");
+      buy.textContent = `${it.price}`;
+      buy.disabled = s.balance < it.price;
+      buy.onclick = () => buyReward(it.id, it.name);
+      row.appendChild(buy);
+    }
+    list.appendChild(row);
+  });
+}
+
+async function buyReward(id, name) {
+  const r = await api("/api/credits/buy", {
+    method: "POST", body: JSON.stringify({ itemId: id }),
+  });
+  if (r && r.ok) { toast(`'${name}' 보상 구매! 🎉`); loadCredits(); }
+  else { toast((r && r.error) || "크레딧이 부족해요"); }
+}
+
+function toggleShopEdit() {
+  shopEditMode = !shopEditMode;
+  const btn = $("#shopEditBtn");
+  if (btn) btn.textContent = shopEditMode ? "완료" : "편집";
+  const addRow = $("#shopAddRow");
+  if (addRow) addRow.classList.toggle("hidden", !shopEditMode);
+  renderCredits(creditState);
+}
+
+async function saveShop(shop) {
+  const r = await api("/api/credits/shop", {
+    method: "POST", body: JSON.stringify({ shop }),
+  });
+  if (r && r.shop) { creditState.shop = r.shop; loadCredits(); }
+}
+
+function addShopItem() {
+  const name = ($("#shopName").value || "").trim();
+  const price = parseInt($("#shopPrice").value, 10);
+  if (!name || isNaN(price)) { toast("이름과 가격을 입력하세요"); return; }
+  const shop = (creditState.shop || []).concat([{ name, price, emoji: "🎁", cat: "기타" }]);
+  $("#shopName").value = ""; $("#shopPrice").value = "";
+  saveShop(shop);
+}
+
+function deleteShopItem(id) {
+  const shop = (creditState.shop || []).filter((i) => i.id !== id);
+  saveShop(shop);
+}
+
+function handleDoneResponse(j, checked) {
+  if (!j) return;
+  if (j.credits) renderCredits(j.credits);
+  if (checked) coinPop("+10");
+  if (j.celebrate) {
+    const key = `celebrated:${todayISO()}:${j.celebrate}`;
+    let already = false;
+    try { already = !!localStorage.getItem(key); } catch (e) {}
+    if (!already) {
+      try { localStorage.setItem(key, "1"); } catch (e) {}
+      showCelebrate("100% 달성! 🔥", "오늘 플랜을 완벽하게 지켰어요!");
+    }
+  }
+}
+
+function showCelebrate(title, sub) {
+  const box = $("#celebrate");
+  if (!box) return;
+  $("#celebrateTitle").textContent = title;
+  $("#celebrateSub").textContent = sub;
+  box.classList.remove("hidden");
+  runConfetti();
+}
+
+function coinPop(text) {
+  const p = el("div", "coin-pop");
+  p.textContent = text;
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 1100);
+}
+
+function runConfetti() {
+  const cv = $("#confetti");
+  if (!cv) return;
+  const ctx = cv.getContext("2d");
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  const cols = ["#ffd166", "#ef476f", "#06d6a0", "#118ab2", "#8a5cf6"];
+  const ps = Array.from({ length: 120 }, () => ({
+    x: Math.random() * cv.width, y: -20 - Math.random() * cv.height,
+    r: 4 + Math.random() * 5, c: cols[(Math.random() * cols.length) | 0],
+    vy: 2 + Math.random() * 3, vx: -1 + Math.random() * 2,
+  }));
+  let frames = 0;
+  (function tick() {
+    frames++;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach((p) => { p.y += p.vy; p.x += p.vx; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.r, p.r); });
+    if (frames < 160 && !$("#celebrate").classList.contains("hidden")) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, cv.width, cv.height);
+  })();
+}
+
+let _toastTimer = null;
+function toast(msg) {
+  let t = $("#toast");
+  if (!t) {
+    t = el("div", "toast");
+    t.id = "toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
 }
 
 function init() {
@@ -1048,6 +1200,10 @@ function init() {
   $("#btnSaveHabits").onclick = saveHabits;
   $("#btnSetup").onclick = () => openSetupWizard();
   setupProTeaser();
+  if ($("#shopEditBtn")) $("#shopEditBtn").onclick = toggleShopEdit;
+  if ($("#shopAddBtn")) $("#shopAddBtn").onclick = addShopItem;
+  if ($("#celebrateClose")) $("#celebrateClose").onclick = () => $("#celebrate").classList.add("hidden");
+  loadCredits();
   $("#btnLogout").onclick = async () => {
     try { await api("/api/logout", { method: "POST", body: "{}" }); } catch (e) {}
     location.href = "/";
