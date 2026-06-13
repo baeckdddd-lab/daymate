@@ -8,6 +8,8 @@ import db, auth, userstore, scheduler, configlib
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
+# 세션을 영속(브라우저 닫아도 유지)으로. 모바일 PWA에서 앱 닫을 때마다 로그아웃되는 것 방지.
+app.permanent_session_lifetime = timedelta(days=30)
 db.init_db()
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -79,6 +81,7 @@ def api_register():
     except auth.AuthError as e:
         return jsonify({"error": str(e)}), 400
     userstore.save_json(user_id, "config.json", dict(DEFAULT_CONFIG))
+    session.permanent = True
     session["uid"] = user_id
     return jsonify({"ok": True})
 
@@ -89,6 +92,7 @@ def api_login():
     user_id = auth.authenticate(b.get("email"), b.get("password"))
     if not user_id:
         return jsonify({"error": "이메일/비밀번호 불일치"}), 401
+    session.permanent = True
     session["uid"] = user_id
     return jsonify({"ok": True})
 
@@ -131,6 +135,27 @@ def api_bootstrap():
         "condition": data.get("conditions", {}).get(d),
         "setupNeeded": not data["config"].get("setupDone"),
     })
+
+
+@app.get("/api/week")
+@login_required
+def api_week():
+    """주간 타임테이블(월~일 7일). 프런트 renderWeek가 days[].slots[range,label,type,done] 사용."""
+    d = resolve_date(request.args.get("date"))
+    base = date.fromisoformat(d)
+    monday = base - timedelta(days=base.weekday())
+    dows = ["월", "화", "수", "목", "금", "토", "일"]
+    days = []
+    for i in range(7):
+        dd = (monday + timedelta(days=i)).isoformat()
+        plan = userstore.load_plan(uid(), dd) or build_plan(uid(), dd)
+        days.append({
+            "date": dd, "dow": dows[i],
+            "slots": [{"range": s["range"], "label": s["label"],
+                       "type": s["type"], "done": s.get("done", False)}
+                      for s in plan["slots"]],
+        })
+    return jsonify({"start": monday.isoformat(), "days": days})
 
 
 @app.post("/api/generate")
