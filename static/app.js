@@ -25,6 +25,7 @@ async function refreshAll() {
   // plan + state를 한 번의 요청으로 (ngrok 왕복 최소화)
   const data = await api(`/api/bootstrap?date=${curDate}`);
   appConfig = data.config || {};
+  renderSupportBtn(data.supportUrl);
   renderPlan(data.plan);
   renderCondition(data.condition);
   renderHabits(data.habits || []);
@@ -1031,6 +1032,19 @@ function setupProTeaser() {
     try { localStorage.setItem(KEY, "1"); } catch (e) {}
     joined();
   };
+}
+
+// U3: PWA 후원/Pro 버튼 — SUPPORT_URL(Stripe Payment Link 등) 있을 때만 노출.
+// 스토어 무관(PWA는 Play Billing 밖). 미설정이면 숨김 → 현 대기리스트 동작 유지.
+function renderSupportBtn(url) {
+  const a = $("#btnSupport");
+  if (!a) return;
+  if (url && /^https?:\/\//.test(url)) {
+    a.href = url;
+    a.hidden = false;
+  } else {
+    a.hidden = true;
+  }
 }
 
 // ---- 크레딧 보상 ----

@@ -142,6 +142,8 @@ def api_bootstrap():
         "events": data["events"], "gradTasks": data["gradTasks"], "habits": data["habits"],
         "condition": data.get("conditions", {}).get(d),
         "setupNeeded": not data["config"].get("setupDone"),
+        # PWA 후원/Pro 결제 링크(Stripe Payment Link 등). 미설정이면 빈값 → 버튼 숨김.
+        "supportUrl": os.environ.get("SUPPORT_URL", ""),
     })
 
 
