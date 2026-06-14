@@ -372,6 +372,15 @@ button.danger:hover { background: #a93226; }
 .streak-badge.at-risk { color: #d9480f; }
 .streak-badge .risk { font-weight: 700; }
 
+/* 온보딩 환영 */
+.welcome-card { text-align: left; }
+.welcome-feats { list-style: none; padding: 0; margin: 14px 0 4px; }
+.welcome-feats li { padding: 8px 0; font-size: 14.5px; border-bottom: 1px solid var(--line); }
+.welcome-feats li:last-child { border-bottom: 0; }
+
+/* 랭킹 초대 버튼 (h3 우측 정렬) */
+#rankSection h3 #rankInvite { margin-left: auto; padding: 3px 12px; font-size: 12px; }
+
 /* 평소 루틴 / 세팅 행 */
 .habitrows, .su-sub { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .habit-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

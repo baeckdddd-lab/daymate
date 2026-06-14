@@ -30,7 +30,40 @@ async function refreshAll() {
   renderHabits(data.habits || []);
   loadDateContext(data);
   loadUpcoming(data);
-  if (data.setupNeeded) openSetupWizard(data);
+  if (data.setupNeeded) showWelcome(data);
+}
+
+// ---- 온보딩(첫 화면) ----
+function showWelcome(data) {
+  const w = $("#welcomeOverlay");
+  if (!w) { openSetupWizard(data); return; }
+  w.classList.remove("hidden");
+  $("#welcomeStart").onclick = quickStart;
+  $("#welcomeCustom").onclick = () => { w.classList.add("hidden"); openSetupWizard(data); };
+}
+
+async function quickStart() {
+  const btn = $("#welcomeStart");
+  btn.disabled = true; const prev = btn.textContent; btn.textContent = "준비 중…";
+  try {
+    await api("/api/setup", { method: "POST", body: JSON.stringify({ date: curDate, config: {}, habits: [] }) });
+    $("#welcomeOverlay").classList.add("hidden");
+    refreshAll();
+  } catch (e) {
+    alert("시작 실패: " + e);
+    btn.disabled = false; btn.textContent = prev;
+  }
+}
+
+// ---- 친구 초대(바이럴) ----
+async function inviteFriend() {
+  const url = location.origin;
+  const text = `Daymate에서 나랑 하루 플랜 대결하자! 누가 더 잘 지키나 🔥\n${url}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: "Daymate", text, url }); return; } catch (e) {}
+  }
+  try { await navigator.clipboard.writeText(text); toast("초대 메시지 복사됨! 친구에게 붙여넣기 하세요 📋"); }
+  catch (e) { toast(url); }
 }
 
 // ---- 오늘 컨디션 → 강도 ----
@@ -1325,6 +1358,7 @@ function init() {
   loadRanking();
   if ($("#nickSave")) $("#nickSave").onclick = saveNickname;
   if ($("#rankRefresh")) $("#rankRefresh").onclick = loadRanking;
+  if ($("#rankInvite")) $("#rankInvite").onclick = inviteFriend;
   initPushUI();
   showNotifyNudge();
   if ($("#nudgeEnable")) $("#nudgeEnable").onclick = async () => { await enablePush(); showNotifyNudge(); };

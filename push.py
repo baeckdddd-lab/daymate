@@ -15,7 +15,7 @@ VAPID_SUB = os.environ.get("VAPID_CLAIM_SUB", "mailto:admin@daymate.app")
 
 KST = timezone(timedelta(hours=9))
 
-DEFAULT_PREFS = {"morning": True, "slot": False, "evening": True,
+DEFAULT_PREFS = {"morning": True, "slot": True, "evening": True,
                  "midnight": True, "reward": True}
 
 # 알림 문구(오타 검수본). {label}/{pct}/{coins}는 호출부에서 채움.
