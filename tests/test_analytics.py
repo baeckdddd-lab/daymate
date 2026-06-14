@@ -39,6 +39,15 @@ def test_cohort_retention():
     assert stats["retention"]["D7"]["retained"] >= 1
 
 
+def test_activation_funnel():
+    c = server.app.test_client()
+    c.post("/api/register", json={"email": "actv@a.com", "password": "pw123456"})
+    c.post("/api/setup", json={"date": "today", "config": {}, "habits": []})  # 온보딩 완료
+    stats = analytics.compute_stats()
+    assert stats["activated"] >= 1
+    assert "first_day_achieved" in stats and "activated_pct" in stats
+
+
 def test_stats_endpoint_key_gate():
     c = server.app.test_client()
     assert c.get("/internal/stats").status_code == 403

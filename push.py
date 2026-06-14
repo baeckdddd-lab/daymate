@@ -18,6 +18,9 @@ KST = timezone(timedelta(hours=9))
 DEFAULT_PREFS = {"morning": True, "slot": True, "evening": True,
                  "midnight": True, "reward": True}
 
+# 슬롯 리마인더는 '꼭 챙길' 타입만 → 알림 피로/이탈 방지(의미블록 전부면 하루 5~10개).
+SLOT_REMINDER_TYPES = {"important", "grad", "exercise"}
+
 # 알림 문구(오타 검수본). {label}/{pct}/{coins}는 호출부에서 채움.
 MSG = {
     "morning": ("☀️ 좋은 아침!", "오늘 플랜을 확인하고 시작해요."),

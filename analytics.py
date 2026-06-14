@@ -64,6 +64,19 @@ def compute_stats(today=None):
         st = userstore.load_json(u, "settled.json", {}).get("maxStreak", 0)
         streaks.append(st)
 
+    # 활성화 퍼널: 온보딩 완료(setupDone) + 가입 첫날 달성(>=60%)
+    import credits as _credits
+    activated, first_day_hit = 0, 0
+    for uid_, created in users:
+        if userstore.load_json(uid_, "config.json", {}).get("setupDone"):
+            activated += 1
+        if created:
+            fp = userstore.load_plan(uid_, created.date().isoformat())
+            if fp:
+                _, _, fp_pct = _credits.achievement(fp)
+                if fp_pct >= 60:
+                    first_day_hit += 1
+
     return {
         "today": today,
         "users_total": len(users),
@@ -76,4 +89,7 @@ def compute_stats(today=None):
         "active_by_day": {d: len(active_by_day.get(d, ())) for d in last14},
         "max_streak_avg": round(sum(streaks) / len(streaks), 1) if streaks else 0,
         "streak_3plus": sum(1 for x in streaks if x >= 3),
+        "activated": activated,
+        "activated_pct": round(activated / len(users) * 100) if users else 0,
+        "first_day_achieved": first_day_hit,
     }

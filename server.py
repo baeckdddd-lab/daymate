@@ -400,7 +400,7 @@ def internal_tick():
             plan = userstore.load_plan(u, today)
             if plan and 0 <= cur_slot < len(plan.get("slots", [])):
                 s = plan["slots"][cur_slot]
-                if s and s.get("type") not in credits.MEANINGLESS_TYPES and not s.get("done"):
+                if s and s.get("type") in push.SLOT_REMINDER_TYPES and not s.get("done"):
                     t = push.MSG["slot"][0]
                     b = push.MSG["slot"][1].format(label=s.get("label", ""))
                     sent["slot"] += push.send_to_user(u, t, b)
