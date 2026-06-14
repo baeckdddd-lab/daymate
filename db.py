@@ -40,5 +40,12 @@ class UserData(Base):
     __table_args__ = (UniqueConstraint("user_id", "kind", "date", name="uq_user_kind_date"),)
 
 
+class ActiveDay(Base):
+    """유저별 '그날 활동함' 기록(리텐션·DAU 측정용). (user_id, day) 자연 dedup."""
+    __tablename__ = "active_day"
+    user_id = Column(Integer, primary_key=True)
+    day = Column(String(10), primary_key=True)
+
+
 def init_db():
     Base.metadata.create_all(engine)

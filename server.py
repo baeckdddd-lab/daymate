@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from functools import wraps
 from flask import Flask, request, session, jsonify, send_from_directory, Response
 
-import db, auth, userstore, scheduler, configlib, credits, push
+import db, auth, userstore, scheduler, configlib, credits, push, analytics
 
 app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
@@ -33,6 +33,10 @@ def login_required(fn):
     def wrap(*a, **k):
         if not session.get("uid"):
             return jsonify({"error": "auth required"}), 401
+        try:
+            analytics.mark_active(session["uid"])
+        except Exception:
+            pass  # 측정 실패가 요청을 막지 않게
         return fn(*a, **k)
     return wrap
 
@@ -401,6 +405,13 @@ def internal_tick():
                     b = push.MSG["slot"][1].format(label=s.get("label", ""))
                     sent["slot"] += push.send_to_user(u, t, b)
     return jsonify({"ok": True, "kst": now.strftime("%Y-%m-%d %H:%M"), "sent": sent})
+
+
+@app.get("/internal/stats")
+def internal_stats():
+    if not TICK_SECRET or request.args.get("key") != TICK_SECRET:
+        return jsonify({"error": "forbidden"}), 403
+    return jsonify(analytics.compute_stats())
 
 
 @app.post("/api/self-dev")
