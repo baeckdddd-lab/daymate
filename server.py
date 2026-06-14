@@ -409,7 +409,8 @@ def internal_tick():
 
 @app.get("/internal/stats")
 def internal_stats():
-    if not TICK_SECRET or request.args.get("key") != TICK_SECRET:
+    secret = os.environ.get("TICK_SECRET", "") or TICK_SECRET
+    if not secret or request.args.get("key") != secret:
         return jsonify({"error": "forbidden"}), 403
     return jsonify(analytics.compute_stats())
 
