@@ -57,7 +57,8 @@ async function quickStart() {
 
 // ---- 친구 초대(바이럴) ----
 async function inviteFriend() {
-  const url = location.origin;
+  const nick = (creditState && creditState.nickname) ? String(creditState.nickname).trim() : "";
+  const url = nick ? `${location.origin}/?ref=${encodeURIComponent(nick)}` : location.origin;
   const text = `Daymate에서 나랑 하루 플랜 대결하자! 누가 더 잘 지키나 🔥\n${url}`;
   if (navigator.share) {
     try { await navigator.share({ title: "Daymate", text, url }); return; } catch (e) {}

@@ -67,8 +67,15 @@ def compute_stats(today=None):
     # 활성화 퍼널: 온보딩 완료(setupDone) + 가입 첫날 달성(>=60%)
     import credits as _credits
     activated, first_day_hit = 0, 0
+    referred = 0
+    referred_by = defaultdict(int)
     for uid_, created in users:
-        if userstore.load_json(uid_, "config.json", {}).get("setupDone"):
+        cfg = userstore.load_json(uid_, "config.json", {})
+        rb = (cfg.get("referredBy") or "").strip()
+        if rb:
+            referred += 1
+            referred_by[rb] += 1
+        if cfg.get("setupDone"):
             activated += 1
         if created:
             fp = userstore.load_plan(uid_, created.date().isoformat())
@@ -92,4 +99,7 @@ def compute_stats(today=None):
         "activated": activated,
         "activated_pct": round(activated / len(users) * 100) if users else 0,
         "first_day_achieved": first_day_hit,
+        "referred_signups": referred,
+        "referred_pct": round(referred / len(users) * 100) if users else 0,
+        "referred_by": dict(sorted(referred_by.items(), key=lambda kv: -kv[1])),
     }

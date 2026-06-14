@@ -48,6 +48,15 @@ def test_activation_funnel():
     assert "first_day_achieved" in stats and "activated_pct" in stats
 
 
+def test_referral_tracking():
+    c = server.app.test_client()
+    c.post("/api/register", json={"email": "ref1@a.com", "password": "pw123456", "ref": "inviterA"})
+    stats = analytics.compute_stats()
+    assert stats["referred_signups"] >= 1
+    assert stats["referred_by"].get("inviterA", 0) >= 1
+    assert "referred_pct" in stats
+
+
 def test_stats_endpoint_key_gate():
     c = server.app.test_client()
     assert c.get("/internal/stats").status_code == 403

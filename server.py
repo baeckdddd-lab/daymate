@@ -84,7 +84,11 @@ def api_register():
         user_id = auth.register(b.get("email"), b.get("password"))
     except auth.AuthError as e:
         return jsonify({"error": str(e)}), 400
-    userstore.save_json(user_id, "config.json", dict(DEFAULT_CONFIG))
+    cfg = dict(DEFAULT_CONFIG)
+    ref = (b.get("ref") or "").strip()[:40]
+    if ref:
+        cfg["referredBy"] = ref
+    userstore.save_json(user_id, "config.json", cfg)
     session.permanent = True
     session["uid"] = user_id
     return jsonify({"ok": True})

@@ -20,9 +20,15 @@
     <a href="/privacy.html" style="opacity:.7">개인정보 처리방침</a></p>
 </div>
 <script>
-async function post(p){const r=await fetch(p,{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({email:email.value.trim(),password:pw.value})});return r;}
+// 초대 추적: ?ref=<inviter> 를 첫 방문 때 저장(가입 때 1회 전송).
+try{const rf=new URLSearchParams(location.search).get("ref");
+  if(rf&&!localStorage.getItem("daymate_ref"))localStorage.setItem("daymate_ref",rf.slice(0,40));}catch(e){}
+async function post(p,extra){const body={email:email.value.trim(),password:pw.value};
+  if(extra)Object.assign(body,extra);
+  const r=await fetch(p,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify(body)});return r;}
 function go(){location.href="/";}
 loginBtn.onclick=async()=>{const r=await post("/api/login");if(r.ok)go();else msg.textContent=(await r.json()).error;};
-regBtn.onclick=async()=>{const r=await post("/api/register");if(r.ok)go();else msg.textContent=(await r.json()).error;};
+regBtn.onclick=async()=>{let ref=null;try{ref=localStorage.getItem("daymate_ref");}catch(e){}
+  const r=await post("/api/register",ref?{ref:ref}:null);if(r.ok)go();else msg.textContent=(await r.json()).error;};
 </script></body></html>
