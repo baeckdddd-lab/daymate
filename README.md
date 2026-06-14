@@ -14,6 +14,8 @@ python -m pytest tests/
 - `DATABASE_URL` — 없으면 로컬 SQLite(`local.db`). 클라우드는 Postgres URL (예: Neon/Supabase/Railway). `postgres://`는 자동으로 `postgresql://`로 보정.
 - `SECRET_KEY` — 세션 서명 키. **배포 시 반드시 무작위 값으로 설정**(미설정 시 dev 기본값).
 - `PORT` — 호스팅사가 주입(없으면 8800).
+- `SUPPORT_URL` — 후원/Pro 외부 결제 링크(Stripe Payment Link 등). 설정 시 설정탭에 후원 버튼 노출, 미설정이면 숨김.
+- `STORE_BUILD` — `1`이면 `SUPPORT_URL`이 설정돼 있어도 외부결제 경로를 강제로 숨김. **Google Play TWA 등 스토어 패키징 제출 시 반드시 `=1`** (앱 내 디지털재화/코스메틱 잠금해제는 Play Billing/IAP 의무 → 외부 Stripe 노출 시 심사 반려). LIVE 웹(미설정)=후원 노출 / 스토어 빌드(=1)=후원 숨김, 동일 코드베이스.
 
 ## 배포 (Render 예시)
 1. 이 레포를 호스팅사에 연결(Web Service).
