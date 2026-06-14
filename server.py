@@ -508,9 +508,15 @@ def privacy():
     플레이스홀더를 env 값으로 자동 치환 — 수동 교체 누락(런북 C-7 footgun) 방지."""
     with open(os.path.join(STATIC, "privacy.html"), encoding="utf-8") as f:
         html = f.read()
+    placeholder = "CONTACT_EMAIL (운영자 이메일 기재 예정)"
     contact = os.environ.get("CONTACT_EMAIL")
     if contact:
-        html = html.replace("CONTACT_EMAIL (운영자 이메일 기재 예정)", contact)
+        repl = contact
+    else:
+        # CONTACT_EMAIL 미설정 시에도 디버그 플레이스홀더 원문이 노출되면
+        # 심사 반려 위험(rep #31) → 기능적 폴백 문구로 강등(앱 내 삭제 경로 안내).
+        repl = "앱 내 [도구 > 계정 삭제]에서 직접 삭제할 수 있으며, 문의는 앱 스토어 등록 정보의 개발자 이메일로 연락 주세요."
+    html = html.replace(placeholder, repl)
     return Response(html, mimetype="text/html")
 
 
