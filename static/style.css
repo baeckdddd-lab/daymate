@@ -381,6 +381,12 @@ button.danger:hover { background: #a93226; }
 /* 랭킹 초대 버튼 (h3 우측 정렬) */
 #rankSection h3 #rankInvite { margin-left: auto; padding: 3px 12px; font-size: 12px; }
 
+/* 가변 보상: 2배 데이 배너 */
+.bonus-banner { margin-top: 8px; padding: 8px 12px; border-radius: 10px;
+  background: linear-gradient(90deg, #ffd166, #ffb703); color: #5a3d00;
+  font-size: 13.5px; font-weight: 700; }
+.bonus-banner.hidden { display: none; }
+
 /* 평소 루틴 / 세팅 행 */
 .habitrows, .su-sub { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .habit-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

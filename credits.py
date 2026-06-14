@@ -3,6 +3,7 @@
 파생형: earned는 플랜에서 계산, spent는 원장. 과거 날짜는 동결(settle)되어
 이후 그 날짜를 수정해도 크레딧이 변하지 않는다(자정 마감 = 타이밍 강제).
 """
+import hashlib
 import time
 
 import db
@@ -10,6 +11,17 @@ import userstore
 
 MEANINGLESS_TYPES = {"routine", "meal", "free"}
 MILESTONES = {3: 50, 7: 150, 14: 400, 30: 1000}
+BONUS_DAY_MULT = 2  # 가변 보상: 보너스 데이는 하루 크레딧 2배
+
+
+def bonus_multiplier(user_id, date_str):
+    """가변 보상 — (user,date) 해시로 결정적. ~20%의 날이 '2배 데이'.
+
+    리롤 불가(날짜 고정), 어느 날이 보너스인지 모름 → 기대·놀라움(가변 보상).
+    파이썬 hash()는 프로세스마다 바뀌므로 sha256 사용(재시작 후에도 동일).
+    """
+    h = int(hashlib.sha256(f"{user_id}:{date_str}".encode()).hexdigest(), 16)
+    return BONUS_DAY_MULT if h % 5 == 0 else 1
 
 SEED_SHOP = [
     {"id": "s1", "name": "유튜브 30분", "price": 50, "emoji": "🛋", "cat": "휴식"},
@@ -110,13 +122,14 @@ def earned_total(user_id, today):
         plan = userstore.load_plan(user_id, d) or {"slots": []}
         _, _, pct = achievement(plan)
         pcts.append(pct)
+        de = day_earned(plan) * bonus_multiplier(user_id, d)   # 보너스 데이 배율 적용
         if d < today:
             if d not in days:
-                days[d] = day_earned(plan)   # 동결
+                days[d] = de   # 동결(배율 포함)
                 dirty = True
             total += days[d]
         else:
-            total += day_earned(plan)         # 오늘 실시간
+            total += de         # 오늘 실시간
     eff = max(max_streak, streak_len(pcts))
     if eff > max_streak:
         max_streak = eff
@@ -147,7 +160,8 @@ def get_state(user_id, today):
     return {
         "earned": earned, "spent": spent_sum, "balance": earned - spent_sum,
         "today": {"done": done, "total": total, "achievement": pct,
-                  "earned": day_earned(plan)},
+                  "earned": day_earned(plan) * bonus_multiplier(user_id, today),
+                  "bonusDay": bonus_multiplier(user_id, today) > 1},
         "streak": settled.get("maxStreak", 0),
         "current": current_streak(user_id, today),
         "shop": c["shop"], "spentLog": c["spent"][-20:],

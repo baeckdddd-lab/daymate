@@ -260,6 +260,7 @@ function renderAchvBand(plan) {
   $("#achvFill").style.width = pct + "%";
   updateStreak().catch(() => {});  // 점은 실패해도 띠 본체는 유지
   renderStreakBadge();             // 현재 연속 + 손실회피(creditState.current)
+  renderBonusDay();                // 가변 보상: 오늘 2배 데이 공개
 }
 
 // 주간 streak: 이미 있는 /api/week 재사용 (라우트 추가 0)
@@ -1049,6 +1050,7 @@ function renderCredits(s) {
   const ni = $("#nickInput");
   if (ni && document.activeElement !== ni && s.nickname) ni.value = s.nickname;
   renderStreakBadge();
+  renderBonusDay();
   const list = $("#shopList");
   if (!list) return;
   list.innerHTML = "";
@@ -1075,6 +1077,13 @@ function renderCredits(s) {
     }
     list.appendChild(row);
   });
+}
+
+function renderBonusDay() {
+  const b = $("#bonusBanner");
+  if (!b) return;
+  const t = creditState && creditState.today;
+  b.classList.toggle("hidden", !(t && t.bonusDay));
 }
 
 function renderStreakBadge() {

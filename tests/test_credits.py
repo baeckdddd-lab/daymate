@@ -57,11 +57,14 @@ def test_earned_total_freezes_past():
         "slots": [{"type": "grad", "done": True}, {"type": "goal", "done": True}]})
     userstore.save_plan(u, {"date": "2026-06-12",
         "slots": [{"type": "grad", "done": True}, {"type": "goal", "done": False}]})
-    # 과거 100%(150) + 오늘 50%(50) = 200. streak: 100→50 끊김 → 보너스 0.
+    # 과거 100%(150) + 오늘 50%(50), 각 날짜 보너스 배율 적용. streak: 100→50 끊김 → 0.
+    m10 = credits.bonus_multiplier(u, "2026-06-10")
+    m12 = credits.bonus_multiplier(u, "2026-06-12")
+    expected = 150 * m10 + 50 * m12
     e1 = credits.earned_total(u, "2026-06-12")
-    assert e1 == 200
+    assert e1 == expected
     userstore.save_plan(u, {"date": "2026-06-10", "slots": [{"type": "grad", "done": False}]})
-    assert credits.earned_total(u, "2026-06-12") == 200
+    assert credits.earned_total(u, "2026-06-12") == expected   # 과거 동결
 
 
 def test_shop_seed_balance_buy():
@@ -69,14 +72,33 @@ def test_shop_seed_balance_buy():
     u = "u-shop-1"
     userstore.save_plan(u, {"date": "2026-06-12",
         "slots": [{"type": "grad", "done": True}, {"type": "goal", "done": True}]})
-    state = credits.get_state(u, "2026-06-12")    # 100% → 150
-    assert state["earned"] == 150 and state["balance"] == 150
+    exp = 150 * credits.bonus_multiplier(u, "2026-06-12")   # 100% × 보너스배율
+    state = credits.get_state(u, "2026-06-12")
+    assert state["earned"] == exp and state["balance"] == exp
     assert len(state["shop"]) == 9
     item_id = state["shop"][0]["id"]
     res = credits.buy(u, item_id, "2026-06-12")   # 유튜브30분 50 차감
-    assert res["ok"] and res["balance"] == 100
+    assert res["ok"] and res["balance"] == exp - 50
     big = next(i for i in state["shop"] if i["price"] == 1500)["id"]
     assert credits.buy(u, big, "2026-06-12")["ok"] is False
+
+
+def test_bonus_multiplier():
+    # 결정적(재호출 동일) + 1과 2 둘 다 발생
+    vals = {credits.bonus_multiplier("u-bonus", f"2026-06-{d:02d}") for d in range(1, 29)}
+    assert vals <= {1, 2} and 1 in vals and 2 in vals
+    assert credits.bonus_multiplier("u-bonus", "2026-06-14") == credits.bonus_multiplier("u-bonus", "2026-06-14")
+
+
+def test_bonus_day_doubles_earned():
+    import userstore
+    u = "u-bonusday"
+    # u의 보너스 데이인 날짜 하나 찾기
+    bd = next(f"2026-07-{d:02d}" for d in range(1, 29) if credits.bonus_multiplier(u, f"2026-07-{d:02d}") == 2)
+    userstore.save_plan(u, {"date": bd, "slots": [{"type": "grad", "done": True}]})  # 100%=150
+    st = credits.get_state(u, bd)
+    assert st["today"]["bonusDay"] is True
+    assert st["today"]["earned"] == 300   # 150 × 2
 
 
 def test_current_streak_calendar():
