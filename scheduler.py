@@ -10,8 +10,16 @@
 - filler: 독서(1), 릴스 편집(2) 반복
 """
 
+from datetime import date as _date
+
 WAKE_MIN = 10 * 60  # 10:00
 N_SLOTS = 34        # 10:00 ~ 03:00
+
+
+def habit_on_day(h, weekday):
+    """요일별 루틴 — days(0=월..6=일)가 있으면 그 요일만, 없으면 매일(기존 동작)."""
+    days = h.get("days")
+    return (weekday in days) if days else True
 
 
 # ---- 컨디션 → 강도 ----
@@ -146,6 +154,10 @@ def generate(date_str, data, seed=0, base_slots=None, from_slot=0, carryover=Non
     win = cfg["gradWindow"]
     not_grad_win = lambda i: not in_grad_window(i, win)
     intensity = intensity_for(data, date_str)
+    try:
+        weekday = _date.fromisoformat(date_str).weekday()  # 0=월 .. 6=일
+    except (ValueError, TypeError):
+        weekday = 0
 
     # 과거 슬롯 잠금 (리플래닝). 없으면 빈 하루.
     slots = [None] * N_SLOTS
@@ -201,9 +213,9 @@ def generate(date_str, data, seed=0, base_slots=None, from_slot=0, carryover=Non
                     place(slots, start + k, f"[중요] {g['title']}", "important",
                           base=g["title"])
 
-    # 5) 운동 (연속 3블록, 대학원창 밖에만, seed로 시간대 변형)
+    # 5) 운동 (연속 3블록, 대학원창 밖에만, seed로 시간대 변형) — 요일별 루틴 반영
     for h in data.get("habits", []):
-        if h.get("contiguous"):
+        if h.get("contiguous") and habit_on_day(h, weekday):
             n = h["blocks"]
             base_pref = clock_to_slot(h["preferStart"]) if h.get("preferStart") else 14
             ex_cands = [base_pref, 20, 24, 12, 16]
@@ -302,7 +314,8 @@ def generate(date_str, data, seed=0, base_slots=None, from_slot=0, carryover=Non
                 goal_units.append(("goal", f"[할일] {g['title']}", g["title"]))
     habit_units = []
     for h in data.get("habits", []):
-        if not h.get("contiguous") and h.get("daily"):
+        if (not h.get("contiguous") and (h.get("daily") or h.get("days"))
+                and habit_on_day(h, weekday)):
             for _ in range(h["blocks"]):
                 habit_units.append(("habit", f"[습관] {h['name']}", h["name"]))
     # 날짜별 맞춤 filler가 있으면 우선, 없으면 config 풀

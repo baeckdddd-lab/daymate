@@ -453,7 +453,16 @@ function habitRow(h) {
   cont.onchange = () => { pref.disabled = !cont.checked; };
   const del = el("button", "del"); del.textContent = "삭제";
   del.onclick = () => row.remove();
-  row.append(name, blocks, contWrap, pref, del);
+  // 요일 토글: 아무것도 안 고르면 매일, 고르면 그 요일만 (월수금/화목 같은 시간표 루틴)
+  const dayWrap = el("div", "h-days");
+  const sel = new Set(h.days || []);
+  ["월", "화", "수", "목", "금", "토", "일"].forEach((d, i) => {
+    const chip = el("span", "day-chip" + (sel.has(i) ? " on" : ""));
+    chip.textContent = d; chip.dataset.day = i;
+    chip.onclick = () => chip.classList.toggle("on");
+    dayWrap.append(chip);
+  });
+  row.append(name, blocks, contWrap, pref, del, dayWrap);
   return row;
 }
 
@@ -468,11 +477,14 @@ function renderHabits(habits) {
 function collectHabits(container) {
   return [...container.querySelectorAll(".habit-row")].map((r) => {
     const ps = r.querySelector(".h-pref").value;
+    const days = [...r.querySelectorAll(".h-days .day-chip.on")]
+      .map((c) => parseInt(c.dataset.day, 10));
     return {
       name: r.querySelector(".h-name").value.trim(),
       blocks: parseInt(r.querySelector(".h-blocks").value, 10) || 1,
       contiguous: r.querySelector(".h-cont input").checked,
       preferStart: ps || undefined,
+      days,
     };
   }).filter((h) => h.name);
 }

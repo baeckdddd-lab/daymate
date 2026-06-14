@@ -37,8 +37,18 @@ def normalize_habits(raw):
         except (TypeError, ValueError):
             blocks = 1
         blocks = max(1, min(8, blocks))
-        item = {"name": name, "blocks": blocks, "daily": True,
+        # 요일별 루틴: days(0=월..6=일). 있으면 그 요일만, 없으면 매일.
+        raw_days = h.get("days")
+        days = sorted({int(d) for d in raw_days
+                       if isinstance(d, (int, float)) and 0 <= int(d) <= 6}) \
+            if isinstance(raw_days, list) else []
+        item = {"name": name, "blocks": blocks,
                 "contiguous": bool(h.get("contiguous"))}
+        if days:
+            item["days"] = days
+            item["daily"] = False
+        else:
+            item["daily"] = True
         ps = h.get("preferStart")
         if _valid_hhmm(ps):
             item["preferStart"] = ps.strip()

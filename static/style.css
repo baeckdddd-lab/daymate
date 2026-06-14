@@ -416,6 +416,11 @@ button.danger:hover { background: #a93226; }
 .habit-row .h-cont input { width: 15px; height: 15px; margin: 0; }
 .habit-row .h-pref, .habit-row .m-start { width: auto; }
 .habit-row .f-load { padding: 4px; border-radius: 6px; border: 1px solid var(--line); }
+.habit-row .h-days { display: flex; gap: 4px; flex-basis: 100%; margin-top: 2px; }
+.day-chip { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: 1px solid var(--line); font-size: 11px; cursor: pointer;
+  color: var(--muted); user-select: none; }
+.day-chip.on { background: var(--grad); color: #fff; border-color: var(--grad); }
 
 /* 초기 세팅 위저드 */
 .setup-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(20,30,60,.45);
