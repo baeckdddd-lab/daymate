@@ -387,6 +387,24 @@ button.danger:hover { background: #a93226; }
   font-size: 13.5px; font-weight: 700; }
 .bonus-banner.hidden { display: none; }
 
+/* 슬롯 집중 버튼 */
+.focusbtn { background: transparent; border: 1px solid var(--line); color: var(--grad);
+  border-radius: 6px; padding: 2px 9px; font-size: 12px; cursor: pointer; line-height: 1; }
+.focusbtn:hover { background: var(--grad); color: #fff; }
+
+/* 집중 타이머 모달 */
+.focus-modal { position: fixed; inset: 0; z-index: 92; display: flex; align-items: center;
+  justify-content: center; background: rgba(20,24,34,.6); }
+.focus-modal.hidden { display: none; }
+.focus-card { background: #fff; border-radius: 20px; padding: 28px 32px; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3); max-width: 86vw; min-width: 280px; }
+.focus-label { font-size: 15px; color: var(--muted); margin-bottom: 6px; }
+.focus-time { font-size: 64px; font-weight: 800; color: var(--grad); font-variant-numeric: tabular-nums;
+  line-height: 1.1; margin: 8px 0 16px; }
+.focus-controls, .focus-actions { display: flex; gap: 8px; justify-content: center; }
+.focus-actions { margin-top: 12px; }
+.focus-controls button, .focus-actions button { padding: 9px 16px; }
+
 /* 평소 루틴 / 세팅 행 */
 .habitrows, .su-sub { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .habit-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

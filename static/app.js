@@ -719,7 +719,15 @@ function buildSlotRow(date, s) {
   editBtn.textContent = "✎";
   editBtn.title = "이 시간 직접 수정 / 메모";
   editBtn.onclick = () => openSlotEditor(li, date, s);
-  li.append(cb, time, body, editBtn);
+  if (!["routine", "meal", "free"].includes(s.type) && !s.done) {
+    const focusBtn = el("button", "focusbtn");
+    focusBtn.textContent = "▶";
+    focusBtn.title = "집중 타이머";
+    focusBtn.onclick = (e) => { e.stopPropagation(); startFocus(date, s); };
+    li.append(cb, time, body, focusBtn, editBtn);
+  } else {
+    li.append(cb, time, body, editBtn);
+  }
   return li;
 }
 
@@ -1349,6 +1357,68 @@ function initPushUI() {
   } catch (e) {}
 }
 
+// ---- 집중 타이머(뽀모도로) ----
+const focusState = { interval: null, remaining: 25 * 60, running: false, date: null, slot: null };
+
+function fmtMMSS(s) {
+  const m = Math.floor(s / 60), x = s % 60;
+  return `${m}:${String(x).padStart(2, "0")}`;
+}
+
+function focusStopTick() {
+  if (focusState.interval) { clearInterval(focusState.interval); focusState.interval = null; }
+  focusState.running = false;
+}
+
+function startFocus(date, s) {
+  focusState.date = date; focusState.slot = s.slot;
+  focusState.remaining = 25 * 60;
+  focusStopTick();
+  $("#focusLabel").textContent = s.label;
+  $("#focusTime").textContent = fmtMMSS(focusState.remaining);
+  $("#focusToggle").textContent = "시작";
+  $("#focusModal").classList.remove("hidden");
+}
+
+function focusToggle() {
+  if (focusState.running) { focusStopTick(); $("#focusToggle").textContent = "계속"; return; }
+  focusState.running = true; $("#focusToggle").textContent = "일시정지";
+  focusState.interval = setInterval(() => {
+    focusState.remaining = Math.max(0, focusState.remaining - 1);
+    $("#focusTime").textContent = fmtMMSS(focusState.remaining);
+    if (focusState.remaining <= 0) {
+      focusStopTick(); $("#focusToggle").textContent = "시작";
+      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+      toast("집중 끝! 완료 체크하세요 🎉");
+    }
+  }, 1000);
+}
+
+async function focusDone() {
+  if (focusState.date == null) return;
+  const r = await api("/api/done", {
+    method: "POST", body: JSON.stringify({ date: focusState.date, slot: focusState.slot, done: true }),
+  });
+  handleDoneResponse(r, true);
+  $("#focusModal").classList.add("hidden");
+  focusStopTick();
+  loadPlan(focusState.date);
+}
+
+function initFocus() {
+  if (!$("#focusModal")) return;
+  $("#focusToggle").onclick = focusToggle;
+  $("#focusPlus5").onclick = () => {
+    focusState.remaining += 5 * 60; $("#focusTime").textContent = fmtMMSS(focusState.remaining);
+  };
+  $("#focusReset").onclick = () => {
+    focusStopTick(); focusState.remaining = 25 * 60;
+    $("#focusTime").textContent = fmtMMSS(focusState.remaining); $("#focusToggle").textContent = "시작";
+  };
+  $("#focusDone").onclick = focusDone;
+  $("#focusClose").onclick = () => { focusStopTick(); $("#focusModal").classList.add("hidden"); };
+}
+
 function init() {
   renderLegend();
   document.body.classList.add("tab-today");
@@ -1414,6 +1484,7 @@ function init() {
   if ($("#rankRefresh")) $("#rankRefresh").onclick = loadRanking;
   if ($("#rankInvite")) $("#rankInvite").onclick = inviteFriend;
   initPushUI();
+  initFocus();
   showNotifyNudge();
   if ($("#nudgeEnable")) $("#nudgeEnable").onclick = async () => { await enablePush(); showNotifyNudge(); };
   if ($("#nudgeClose")) $("#nudgeClose").onclick = () => {
