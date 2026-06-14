@@ -143,7 +143,10 @@ def api_bootstrap():
         "condition": data.get("conditions", {}).get(d),
         "setupNeeded": not data["config"].get("setupDone"),
         # PWA 후원/Pro 결제 링크(Stripe Payment Link 등). 미설정이면 빈값 → 버튼 숨김.
-        "supportUrl": os.environ.get("SUPPORT_URL", ""),
+        # STORE_BUILD=1(Play TWA 등 스토어 패키징)이면 외부결제 경로를 강제 숨김:
+        # 디지털재화/코스메틱 잠금해제는 Play Billing/IAP 의무 → 외부 Stripe 노출 시 심사 반려.
+        # 동일 코드베이스로 LIVE 웹(미설정)=후원 노출 / 스토어 빌드(=1)=후원 숨김.
+        "supportUrl": "" if os.environ.get("STORE_BUILD") else os.environ.get("SUPPORT_URL", ""),
     })
 
 
