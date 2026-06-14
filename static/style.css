@@ -430,6 +430,8 @@ button.danger:hover { background: #a93226; }
   text-align: center; padding: 10px 12px; border-radius: 8px; text-decoration: none;
   font-weight: 600; color: #5a4a00; background: #ffe79a; border: 1px solid #f0d062; }
 .support-btn:hover { background: #ffdf7a; }
+.supporter-badge { margin-top: 8px; padding: 8px 10px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; color: #5a4a00; background: #fff6da; border: 1px solid #f0d062; }
 
 /* U3: 달성률 띠 + 주간 streak */
 .achv-band { margin: 2px 0 12px; padding: 10px 12px; background: var(--panel);

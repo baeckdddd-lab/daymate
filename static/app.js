@@ -1045,6 +1045,35 @@ function renderSupportBtn(url) {
   } else {
     a.hidden = true;
   }
+  renderSupporterBadge();
+}
+
+// 후원 완료 후 복귀 처리. Stripe Payment Link "결제 후 이동" URL을
+// .../?supported=1 로 설정하면 호출됨. 서버 무관(프런트 전용).
+function handleSupportReturn() {
+  let supported = false;
+  try { supported = new URLSearchParams(location.search).get("supported") === "1"; } catch (e) {}
+  if (!supported) return;
+  try { localStorage.setItem("supporter", "1"); } catch (e) {}
+  // URL에서 supported 파라미터 제거(새로고침 시 재발동 방지).
+  try {
+    const u = new URL(location.href);
+    u.searchParams.delete("supported");
+    history.replaceState(null, "", u.pathname + u.search + u.hash);
+  } catch (e) {}
+  toast("💛 후원해주셔서 고마워요!");
+  if (typeof showCelebrate === "function") {
+    try { showCelebrate("💛 고마워요!", "후원 덕분에 Daymate가 계속 자라요."); } catch (e) {}
+  }
+  renderSupporterBadge();
+}
+
+function renderSupporterBadge() {
+  const b = $("#supporterBadge");
+  if (!b) return;
+  let isSupporter = false;
+  try { isSupporter = localStorage.getItem("supporter") === "1"; } catch (e) {}
+  b.classList.toggle("hidden", !isSupporter);
 }
 
 // ---- 크레딧 보상 ----
@@ -1375,6 +1404,7 @@ function init() {
   $("#btnSaveHabits").onclick = saveHabits;
   $("#btnSetup").onclick = () => openSetupWizard();
   setupProTeaser();
+  handleSupportReturn();
   if ($("#shopEditBtn")) $("#shopEditBtn").onclick = toggleShopEdit;
   if ($("#shopAddBtn")) $("#shopAddBtn").onclick = addShopItem;
   if ($("#celebrateClose")) $("#celebrateClose").onclick = () => $("#celebrate").classList.add("hidden");
