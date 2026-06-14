@@ -226,6 +226,7 @@ function renderAchvBand(plan) {
   $("#achvHint").textContent = `오늘 달성률 (${done}/${total})`;
   $("#achvFill").style.width = pct + "%";
   updateStreak().catch(() => {});  // 점은 실패해도 띠 본체는 유지
+  renderStreakBadge();             // 현재 연속 + 손실회피(creditState.current)
 }
 
 // 주간 streak: 이미 있는 /api/week 재사용 (라우트 추가 0)
@@ -1014,6 +1015,7 @@ function renderCredits(s) {
   set("#cStreak", s.streak);
   const ni = $("#nickInput");
   if (ni && document.activeElement !== ni && s.nickname) ni.value = s.nickname;
+  renderStreakBadge();
   const list = $("#shopList");
   if (!list) return;
   list.innerHTML = "";
@@ -1040,6 +1042,20 @@ function renderCredits(s) {
     }
     list.appendChild(row);
   });
+}
+
+function renderStreakBadge() {
+  const b = $("#streakBadge");
+  if (!b) return;
+  const c = creditState && creditState.current;
+  if (!c || (c.streak <= 0 && !c.atRisk)) { b.classList.add("hidden"); return; }
+  b.classList.remove("hidden");
+  b.classList.toggle("at-risk", !!c.atRisk);
+  if (c.atRisk) {
+    b.innerHTML = `🔥 <b>${c.streak}일</b> 연속 · <span class="risk">오늘 채우면 ${c.streak + 1}일! 안 하면 끊겨요</span>`;
+  } else {
+    b.innerHTML = `🔥 <b>${c.streak}일</b> 연속 달성 중!`;
+  }
 }
 
 async function buyReward(id, name) {

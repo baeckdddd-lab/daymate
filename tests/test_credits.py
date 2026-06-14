@@ -79,6 +79,29 @@ def test_shop_seed_balance_buy():
     assert credits.buy(u, big, "2026-06-12")["ok"] is False
 
 
+def test_current_streak_calendar():
+    import userstore
+    u = "u-cs-1"
+    for d in ("2026-06-12", "2026-06-13"):
+        userstore.save_plan(u, {"date": d, "slots": [{"type": "grad", "done": True}]})  # 100%
+    userstore.save_plan(u, {"date": "2026-06-14",
+        "slots": [{"type": "grad", "done": True}, {"type": "goal", "done": False}]})    # 50%
+    cs = credits.current_streak(u, "2026-06-14")
+    assert cs["streak"] == 2 and cs["todayAchieved"] is False and cs["atRisk"] is True
+    userstore.save_plan(u, {"date": "2026-06-14", "slots": [{"type": "grad", "done": True}]})
+    cs2 = credits.current_streak(u, "2026-06-14")
+    assert cs2["streak"] == 3 and cs2["todayAchieved"] is True and cs2["atRisk"] is False
+
+
+def test_current_streak_gap_breaks():
+    import userstore
+    u = "u-cs-2"
+    userstore.save_plan(u, {"date": "2026-06-10", "slots": [{"type": "grad", "done": True}]})
+    userstore.save_plan(u, {"date": "2026-06-12", "slots": [{"type": "grad", "done": True}]})
+    cs = credits.current_streak(u, "2026-06-12")  # 어제(06-11) 빈날 → 끊김
+    assert cs["streak"] == 1
+
+
 def test_save_shop():
     import userstore
     u = "u-shop-2"

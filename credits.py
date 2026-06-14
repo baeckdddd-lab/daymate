@@ -67,6 +67,36 @@ def streak_bonus(max_streak):
     return sum(b for m, b in MILESTONES.items() if m <= max_streak)
 
 
+def current_streak(user_id, today):
+    """현재 연속 달성일(달력 기준 — 빈 날이 있으면 끊김). 손실회피 표시용.
+
+    today는 달성(>=60%)했을 때만 streak에 포함. 미달이면 어제까지의 run을
+    세고 atRisk=True(오늘 채우면 잇고, 안 하면 끊김).
+    반환 {streak, todayAchieved, atRisk}.
+    """
+    from datetime import date as _date, timedelta as _td
+    tplan = userstore.load_plan(user_id, today)
+    today_ok = False
+    if tplan:
+        _, _, p = achievement(tplan)
+        today_ok = p >= 60
+    streak = 0
+    cur = _date.fromisoformat(today)
+    if not today_ok:
+        cur -= _td(days=1)
+    while streak <= 400:
+        plan = userstore.load_plan(user_id, cur.isoformat())
+        if not plan:
+            break
+        _, _, p = achievement(plan)
+        if p < 60:
+            break
+        streak += 1
+        cur -= _td(days=1)
+    return {"streak": streak, "todayAchieved": today_ok,
+            "atRisk": (not today_ok) and streak > 0}
+
+
 # ---- 적립 합산 (오늘 실시간 / 과거 동결) ----
 def earned_total(user_id, today):
     settled = userstore.load_json(user_id, "settled.json", {})
@@ -119,6 +149,7 @@ def get_state(user_id, today):
         "today": {"done": done, "total": total, "achievement": pct,
                   "earned": day_earned(plan)},
         "streak": settled.get("maxStreak", 0),
+        "current": current_streak(user_id, today),
         "shop": c["shop"], "spentLog": c["spent"][-20:],
         "nickname": get_nickname(user_id),
     }
